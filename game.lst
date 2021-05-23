@@ -1,0 +1,927 @@
+# file opened: game.asm
+  1   0000
+  2   0000              					device 		zxspectrum48
+  3   0000
+  4   0000              stack_top:
+  5   0000
+  6   0000              					include		"irq.asm"
+# file opened: irq.asm
+  1+  0000
+  2+  0000              					org			8000h
+  3+  8000
+  4+  8000              INTERRUPT = 81h
+  5+  8000
+  6+  8000              irq_vectors:		dup			257
+  7+  8000 81          >					db			INTERRUPT
+  7+  8001 81          >					db			INTERRUPT
+  7+  8002 81          >					db			INTERRUPT
+  7+  8003 81          >					db			INTERRUPT
+  7+  8004 81          >					db			INTERRUPT
+  7+  8005 81          >					db			INTERRUPT
+  7+  8006 81          >					db			INTERRUPT
+  7+  8007 81          >					db			INTERRUPT
+  7+  8008 81          >					db			INTERRUPT
+  7+  8009 81          >					db			INTERRUPT
+  7+  800A 81          >					db			INTERRUPT
+  7+  800B 81          >					db			INTERRUPT
+  7+  800C 81          >					db			INTERRUPT
+  7+  800D 81          >					db			INTERRUPT
+  7+  800E 81          >					db			INTERRUPT
+  7+  800F 81          >					db			INTERRUPT
+  7+  8010 81          >					db			INTERRUPT
+  7+  8011 81          >					db			INTERRUPT
+  7+  8012 81          >					db			INTERRUPT
+  7+  8013 81          >					db			INTERRUPT
+  7+  8014 81          >					db			INTERRUPT
+  7+  8015 81          >					db			INTERRUPT
+  7+  8016 81          >					db			INTERRUPT
+  7+  8017 81          >					db			INTERRUPT
+  7+  8018 81          >					db			INTERRUPT
+  7+  8019 81          >					db			INTERRUPT
+  7+  801A 81          >					db			INTERRUPT
+  7+  801B 81          >					db			INTERRUPT
+  7+  801C 81          >					db			INTERRUPT
+  7+  801D 81          >					db			INTERRUPT
+  7+  801E 81          >					db			INTERRUPT
+  7+  801F 81          >					db			INTERRUPT
+  7+  8020 81          >					db			INTERRUPT
+  7+  8021 81          >					db			INTERRUPT
+  7+  8022 81          >					db			INTERRUPT
+  7+  8023 81          >					db			INTERRUPT
+  7+  8024 81          >					db			INTERRUPT
+  7+  8025 81          >					db			INTERRUPT
+  7+  8026 81          >					db			INTERRUPT
+  7+  8027 81          >					db			INTERRUPT
+  7+  8028 81          >					db			INTERRUPT
+  7+  8029 81          >					db			INTERRUPT
+  7+  802A 81          >					db			INTERRUPT
+  7+  802B 81          >					db			INTERRUPT
+  7+  802C 81          >					db			INTERRUPT
+  7+  802D 81          >					db			INTERRUPT
+  7+  802E 81          >					db			INTERRUPT
+  7+  802F 81          >					db			INTERRUPT
+  7+  8030 81          >					db			INTERRUPT
+  7+  8031 81          >					db			INTERRUPT
+  7+  8032 81          >					db			INTERRUPT
+  7+  8033 81          >					db			INTERRUPT
+  7+  8034 81          >					db			INTERRUPT
+  7+  8035 81          >					db			INTERRUPT
+  7+  8036 81          >					db			INTERRUPT
+  7+  8037 81          >					db			INTERRUPT
+  7+  8038 81          >					db			INTERRUPT
+  7+  8039 81          >					db			INTERRUPT
+  7+  803A 81          >					db			INTERRUPT
+  7+  803B 81          >					db			INTERRUPT
+  7+  803C 81          >					db			INTERRUPT
+  7+  803D 81          >					db			INTERRUPT
+  7+  803E 81          >					db			INTERRUPT
+  7+  803F 81          >					db			INTERRUPT
+  7+  8040 81          >					db			INTERRUPT
+  7+  8041 81          >					db			INTERRUPT
+  7+  8042 81          >					db			INTERRUPT
+  7+  8043 81          >					db			INTERRUPT
+  7+  8044 81          >					db			INTERRUPT
+  7+  8045 81          >					db			INTERRUPT
+  7+  8046 81          >					db			INTERRUPT
+  7+  8047 81          >					db			INTERRUPT
+  7+  8048 81          >					db			INTERRUPT
+  7+  8049 81          >					db			INTERRUPT
+  7+  804A 81          >					db			INTERRUPT
+  7+  804B 81          >					db			INTERRUPT
+  7+  804C 81          >					db			INTERRUPT
+  7+  804D 81          >					db			INTERRUPT
+  7+  804E 81          >					db			INTERRUPT
+  7+  804F 81          >					db			INTERRUPT
+  7+  8050 81          >					db			INTERRUPT
+  7+  8051 81          >					db			INTERRUPT
+  7+  8052 81          >					db			INTERRUPT
+  7+  8053 81          >					db			INTERRUPT
+  7+  8054 81          >					db			INTERRUPT
+  7+  8055 81          >					db			INTERRUPT
+  7+  8056 81          >					db			INTERRUPT
+  7+  8057 81          >					db			INTERRUPT
+  7+  8058 81          >					db			INTERRUPT
+  7+  8059 81          >					db			INTERRUPT
+  7+  805A 81          >					db			INTERRUPT
+  7+  805B 81          >					db			INTERRUPT
+  7+  805C 81          >					db			INTERRUPT
+  7+  805D 81          >					db			INTERRUPT
+  7+  805E 81          >					db			INTERRUPT
+  7+  805F 81          >					db			INTERRUPT
+  7+  8060 81          >					db			INTERRUPT
+  7+  8061 81          >					db			INTERRUPT
+  7+  8062 81          >					db			INTERRUPT
+  7+  8063 81          >					db			INTERRUPT
+  7+  8064 81          >					db			INTERRUPT
+  7+  8065 81          >					db			INTERRUPT
+  7+  8066 81          >					db			INTERRUPT
+  7+  8067 81          >					db			INTERRUPT
+  7+  8068 81          >					db			INTERRUPT
+  7+  8069 81          >					db			INTERRUPT
+  7+  806A 81          >					db			INTERRUPT
+  7+  806B 81          >					db			INTERRUPT
+  7+  806C 81          >					db			INTERRUPT
+  7+  806D 81          >					db			INTERRUPT
+  7+  806E 81          >					db			INTERRUPT
+  7+  806F 81          >					db			INTERRUPT
+  7+  8070 81          >					db			INTERRUPT
+  7+  8071 81          >					db			INTERRUPT
+  7+  8072 81          >					db			INTERRUPT
+  7+  8073 81          >					db			INTERRUPT
+  7+  8074 81          >					db			INTERRUPT
+  7+  8075 81          >					db			INTERRUPT
+  7+  8076 81          >					db			INTERRUPT
+  7+  8077 81          >					db			INTERRUPT
+  7+  8078 81          >					db			INTERRUPT
+  7+  8079 81          >					db			INTERRUPT
+  7+  807A 81          >					db			INTERRUPT
+  7+  807B 81          >					db			INTERRUPT
+  7+  807C 81          >					db			INTERRUPT
+  7+  807D 81          >					db			INTERRUPT
+  7+  807E 81          >					db			INTERRUPT
+  7+  807F 81          >					db			INTERRUPT
+  7+  8080 81          >					db			INTERRUPT
+  7+  8081 81          >					db			INTERRUPT
+  7+  8082 81          >					db			INTERRUPT
+  7+  8083 81          >					db			INTERRUPT
+  7+  8084 81          >					db			INTERRUPT
+  7+  8085 81          >					db			INTERRUPT
+  7+  8086 81          >					db			INTERRUPT
+  7+  8087 81          >					db			INTERRUPT
+  7+  8088 81          >					db			INTERRUPT
+  7+  8089 81          >					db			INTERRUPT
+  7+  808A 81          >					db			INTERRUPT
+  7+  808B 81          >					db			INTERRUPT
+  7+  808C 81          >					db			INTERRUPT
+  7+  808D 81          >					db			INTERRUPT
+  7+  808E 81          >					db			INTERRUPT
+  7+  808F 81          >					db			INTERRUPT
+  7+  8090 81          >					db			INTERRUPT
+  7+  8091 81          >					db			INTERRUPT
+  7+  8092 81          >					db			INTERRUPT
+  7+  8093 81          >					db			INTERRUPT
+  7+  8094 81          >					db			INTERRUPT
+  7+  8095 81          >					db			INTERRUPT
+  7+  8096 81          >					db			INTERRUPT
+  7+  8097 81          >					db			INTERRUPT
+  7+  8098 81          >					db			INTERRUPT
+  7+  8099 81          >					db			INTERRUPT
+  7+  809A 81          >					db			INTERRUPT
+  7+  809B 81          >					db			INTERRUPT
+  7+  809C 81          >					db			INTERRUPT
+  7+  809D 81          >					db			INTERRUPT
+  7+  809E 81          >					db			INTERRUPT
+  7+  809F 81          >					db			INTERRUPT
+  7+  80A0 81          >					db			INTERRUPT
+  7+  80A1 81          >					db			INTERRUPT
+  7+  80A2 81          >					db			INTERRUPT
+  7+  80A3 81          >					db			INTERRUPT
+  7+  80A4 81          >					db			INTERRUPT
+  7+  80A5 81          >					db			INTERRUPT
+  7+  80A6 81          >					db			INTERRUPT
+  7+  80A7 81          >					db			INTERRUPT
+  7+  80A8 81          >					db			INTERRUPT
+  7+  80A9 81          >					db			INTERRUPT
+  7+  80AA 81          >					db			INTERRUPT
+  7+  80AB 81          >					db			INTERRUPT
+  7+  80AC 81          >					db			INTERRUPT
+  7+  80AD 81          >					db			INTERRUPT
+  7+  80AE 81          >					db			INTERRUPT
+  7+  80AF 81          >					db			INTERRUPT
+  7+  80B0 81          >					db			INTERRUPT
+  7+  80B1 81          >					db			INTERRUPT
+  7+  80B2 81          >					db			INTERRUPT
+  7+  80B3 81          >					db			INTERRUPT
+  7+  80B4 81          >					db			INTERRUPT
+  7+  80B5 81          >					db			INTERRUPT
+  7+  80B6 81          >					db			INTERRUPT
+  7+  80B7 81          >					db			INTERRUPT
+  7+  80B8 81          >					db			INTERRUPT
+  7+  80B9 81          >					db			INTERRUPT
+  7+  80BA 81          >					db			INTERRUPT
+  7+  80BB 81          >					db			INTERRUPT
+  7+  80BC 81          >					db			INTERRUPT
+  7+  80BD 81          >					db			INTERRUPT
+  7+  80BE 81          >					db			INTERRUPT
+  7+  80BF 81          >					db			INTERRUPT
+  7+  80C0 81          >					db			INTERRUPT
+  7+  80C1 81          >					db			INTERRUPT
+  7+  80C2 81          >					db			INTERRUPT
+  7+  80C3 81          >					db			INTERRUPT
+  7+  80C4 81          >					db			INTERRUPT
+  7+  80C5 81          >					db			INTERRUPT
+  7+  80C6 81          >					db			INTERRUPT
+  7+  80C7 81          >					db			INTERRUPT
+  7+  80C8 81          >					db			INTERRUPT
+  7+  80C9 81          >					db			INTERRUPT
+  7+  80CA 81          >					db			INTERRUPT
+  7+  80CB 81          >					db			INTERRUPT
+  7+  80CC 81          >					db			INTERRUPT
+  7+  80CD 81          >					db			INTERRUPT
+  7+  80CE 81          >					db			INTERRUPT
+  7+  80CF 81          >					db			INTERRUPT
+  7+  80D0 81          >					db			INTERRUPT
+  7+  80D1 81          >					db			INTERRUPT
+  7+  80D2 81          >					db			INTERRUPT
+  7+  80D3 81          >					db			INTERRUPT
+  7+  80D4 81          >					db			INTERRUPT
+  7+  80D5 81          >					db			INTERRUPT
+  7+  80D6 81          >					db			INTERRUPT
+  7+  80D7 81          >					db			INTERRUPT
+  7+  80D8 81          >					db			INTERRUPT
+  7+  80D9 81          >					db			INTERRUPT
+  7+  80DA 81          >					db			INTERRUPT
+  7+  80DB 81          >					db			INTERRUPT
+  7+  80DC 81          >					db			INTERRUPT
+  7+  80DD 81          >					db			INTERRUPT
+  7+  80DE 81          >					db			INTERRUPT
+  7+  80DF 81          >					db			INTERRUPT
+  7+  80E0 81          >					db			INTERRUPT
+  7+  80E1 81          >					db			INTERRUPT
+  7+  80E2 81          >					db			INTERRUPT
+  7+  80E3 81          >					db			INTERRUPT
+  7+  80E4 81          >					db			INTERRUPT
+  7+  80E5 81          >					db			INTERRUPT
+  7+  80E6 81          >					db			INTERRUPT
+  7+  80E7 81          >					db			INTERRUPT
+  7+  80E8 81          >					db			INTERRUPT
+  7+  80E9 81          >					db			INTERRUPT
+  7+  80EA 81          >					db			INTERRUPT
+  7+  80EB 81          >					db			INTERRUPT
+  7+  80EC 81          >					db			INTERRUPT
+  7+  80ED 81          >					db			INTERRUPT
+  7+  80EE 81          >					db			INTERRUPT
+  7+  80EF 81          >					db			INTERRUPT
+  7+  80F0 81          >					db			INTERRUPT
+  7+  80F1 81          >					db			INTERRUPT
+  7+  80F2 81          >					db			INTERRUPT
+  7+  80F3 81          >					db			INTERRUPT
+  7+  80F4 81          >					db			INTERRUPT
+  7+  80F5 81          >					db			INTERRUPT
+  7+  80F6 81          >					db			INTERRUPT
+  7+  80F7 81          >					db			INTERRUPT
+  7+  80F8 81          >					db			INTERRUPT
+  7+  80F9 81          >					db			INTERRUPT
+  7+  80FA 81          >					db			INTERRUPT
+  7+  80FB 81          >					db			INTERRUPT
+  7+  80FC 81          >					db			INTERRUPT
+  7+  80FD 81          >					db			INTERRUPT
+  7+  80FE 81          >					db			INTERRUPT
+  7+  80FF 81          >					db			INTERRUPT
+  7+  8100 81          >					db			INTERRUPT
+  8+  8101              					edup
+  9+  8101
+ 10+  8101 00 00 00...  					ds			(INTERRUPT*256+INTERRUPT)-$
+ 11+  8181
+ 12+  8181              					org			(INTERRUPT*256+INTERRUPT)
+ 13+  8181
+ 14+  8181 F5           interrupt:			push		af
+ 15+  8182 C5           					push		bc
+ 16+  8183 D5           					push		de
+ 17+  8184 E5           					push		hl
+ 18+  8185 08           					ex			af, af'
+ 19+  8186 D9           					exx
+ 20+  8187 F5           					push		af
+ 21+  8188 C5           					push		bc
+ 22+  8189 D5           					push		de
+ 23+  818A E5           					push		hl
+ 24+  818B DD E5        					push		ix
+ 25+  818D FD E5        					push		iy
+ 26+  818F
+ 27+  818F 21 D8 81     					ld			hl, FramesPending
+ 28+  8192 34           					inc			(hl)
+ 29+  8193
+ 30+  8193              					; рисуем спрайты
+ 31+  8193
+ 32+  8193 DD 21 3A 83  					ld			ix, player1
+ 33+  8197 CD 43 83     					call		DrawPlayer
+ 34+  819A
+ 35+  819A              					; готово
+ 36+  819A
+ 37+  819A FD E1        					pop			iy
+ 38+  819C DD E1        					pop			ix
+ 39+  819E E1           					pop			hl
+ 40+  819F D1           					pop			de
+ 41+  81A0 C1           					pop			bc
+ 42+  81A1 F1           					pop			af
+ 43+  81A2 08           					ex			af, af'
+ 44+  81A3 D9           					exx
+ 45+  81A4 E1           					pop			hl
+ 46+  81A5 D1           					pop			de
+ 47+  81A6 C1           					pop			bc
+ 48+  81A7 F1           					pop			af
+ 49+  81A8 FB           					ei
+ 50+  81A9 C9           					ret
+ 51+  81AA
+# file closed: irq.asm
+  7   81AA
+  8   81AA F3           start:				di
+  9   81AB 31 00 00     					ld			sp, stack_top
+ 10   81AE 3E 80        					ld			a, 80h
+ 11   81B0 ED 47        					ld			i, a
+ 12   81B2 ED 5E        					im			2
+ 13   81B4 FB           					ei
+ 14   81B5
+ 15   81B5 3E 00        					ld			a, 00h
+ 16   81B7 CD D9 81     					call		ClearScreen
+ 17   81BA
+ 18   81BA DD 21 3A 83  					ld			ix, player1
+ 19   81BE CD 3E 83     					call		InitPlayer
+ 20   81C1
+ 21   81C1 21 D8 81     .mainLoop:			ld			hl, FramesPending
+ 22   81C4 AF           					xor			a
+ 23   81C5 BE           					cp			(hl)
+ 24   81C6 28 0D        					jr			z, .halt
+ 25   81C8 35           					dec			(hl)
+ 26   81C9
+ 27   81C9 CD 05 83     					call		ReadInput
+ 28   81CC
+ 29   81CC DD 21 3A 83  					ld			ix, player1
+ 30   81D0 CD F9 83     					call		HandlePlayer
+ 31   81D3
+ 32   81D3 18 EC        					jr			.mainLoop
+ 33   81D5
+ 34   81D5 76           .halt:				halt
+ 35   81D6 18 E9        					jr			.mainLoop
+ 36   81D8
+ 37   81D8 00           FramesPending:		db			0
+ 38   81D9
+ 39   81D9              					include		"draw.asm"
+# file opened: draw.asm
+  1+  81D9
+  2+  81D9              				; Input:
+  3+  81D9              				;   A = attribute
+  4+  81D9
+  5+  81D9              ClearScreen:	; очищаем пиксели
+  6+  81D9 21 00 40     				ld		hl, 4000h
+  7+  81DC 5D           				ld      e, l
+  8+  81DD 54           				ld		d, h
+  9+  81DE 36 00        				ld		(hl), 0
+ 10+  81E0 13           				inc		de
+ 11+  81E1 01 00 18     				ld		bc, 1800h
+ 12+  81E4 ED B0        				ldir
+ 13+  81E6              				; очищаем атрибуты
+ 14+  81E6 77           				ld		(hl), a
+ 15+  81E7 01 FF 02     				ld		bc, 300h-1
+ 16+  81EA ED B0        				ldir
+ 17+  81EC C9           				ret
+ 18+  81ED
+ 19+  81ED                              ; Input:
+ 20+  81ED                              ;   C = X
+ 21+  81ED                              ;   B = Y (знакоместо)
+ 22+  81ED                              ;   IYH = старший байт адреса
+ 23+  81ED                              ; Output:
+ 24+  81ED                              ;   DE => screen addr
+ 25+  81ED
+ 26+  81ED              CalcScreenAddr: ; Преобразуем координату Y в пикселях в значение в знакоместах
+ 27+  81ED 78                           ld		a, b
+ 28+  81EE 17                           rla
+ 29+  81EF 17                           rla
+ 30+  81F0 17                           rla
+ 31+  81F1 E6 F8                        and		0xf8
+ 32+  81F3 47                           ld		b, a
+ 33+  81F4                              ; Расчитываем адрес на экране
+ 34+  81F4 17                           rla                                 ; A = ? |Y5|Y4|Y3| ?| ?| ?| ?
+ 35+  81F5 17                           rla                                 ; A = Y5|Y4|Y3| ?| ?| ?| ?| ?
+ 36+  81F6 E6 E0                        and     0xe0            ; 1110 0000 ; A = Y5|Y4|Y3| 0| 0| 0| 0| 0
+ 37+  81F8 B1                           or      c               ;             A = Y5|Y4|Y3|X4|X3|X2|X1|X0
+ 38+  81F9 5F                           ld      e, a
+ 39+  81FA 78                           ld      a, b
+ 40+  81FB 1F                           rra
+ 41+  81FC 1F                           rra
+ 42+  81FD 1F                           rra                                 ; A =  ?| ?| ?|Y7|Y6| ?| ?| ?
+ 43+  81FE E6 18                        and     0x18                        ; A =  0| 0| 0|Y7|Y6| 0| 0| 0
+ 44+  8200 57                           ld      d, a
+ 45+  8201 78                           ld      a, b
+ 46+  8202 E6 07                        and     0x07                        ; A =  0| 0| 0| 0| 0|Y2|Y1|Y0
+ 47+  8204 B2                           or      d                           ; A =  0| 0| 0|Y7|Y6|Y2|Y1|Y0
+ 48+  8205 FD B4                        or      iyh                         ; A =  0| 1| 0|Y7|Y6|Y2|Y1|Y0
+ 49+  8207 57                           ld      d, a
+ 50+  8208 C9                           ret
+ 51+  8209
+ 52+  8209                              ; Input:
+ 53+  8209                              ;	A = атрибут
+ 54+  8209                              ;   E = сдвиг (-7..7)
+ 55+  8209                              ;   L = X спрайта (знакоместо)
+ 56+  8209                              ;   H = Y спрайта (знакоместо)
+ 57+  8209                              ;   C = X (знакоместо)
+ 58+  8209                              ;   B = Y (знакоместо)
+ 59+  8209                              ; Output:
+ 60+  8209                              ;   DE => sprite address
+ 61+  8209                              ;   HL => screen address
+ 62+  8209
+ 63+  8209              DrawChar:    	; Сохраняем А
+ 64+  8209 08                           ex      af, af'
+ 65+  820A                              ; Патчим код
+ 66+  820A 7B                           ld		a, e
+ 67+  820B 32 23 82                     ld		(.hotPatch+2), a
+ 68+  820E              				; Расчитываем адрес назначения
+ 69+  820E FD 26 40                     ld		iyh, 0x40
+ 70+  8211 CD ED 81                     call    CalcScreenAddr
+ 71+  8214                              ; Преобразуем координату Y спрайта в адрес в SCR
+ 72+  8214 44                           ld		b, h
+ 73+  8215 4D                           ld		c, l
+ 74+  8216 EB                           ex		de, hl		; сохраню DE в HL
+ 75+  8217                              ; Расчитываем адрес спрайта
+ 76+  8217 FD 26 A0                     ld		iyh, high gfx
+ 77+  821A CD ED 81                     call	CalcScreenAddr
+ 78+  821D
+ 79+  821D FD 21 34 82  				ld		iy, .table
+ 80+  8221 FD 4E 00     .hotPatch:		ld		c, (iy+0)
+ 81+  8224 06 00        				ld		b, 0
+ 82+  8226 FD 09        				add		iy, bc
+ 83+  8228 06 08                        ld      b, 8		; счетчик для цикла
+ 84+  822A FD E9        				jp		(iy)
+ 85+  822C
+ 86+  822C 09           				db		.empty-.table
+ 87+  822D 11           				db		.shiftM7-.table
+ 88+  822E 1D           				db		.shiftM6-.table
+ 89+  822F 2A           				db		.shiftM5-.table
+ 90+  8230 38           				db		.shiftM4-.table
+ 91+  8231 46           				db		.shiftM3-.table
+ 92+  8232 53           				db		.shiftM2-.table
+ 93+  8233 5F           				db		.shiftM1-.table
+ 94+  8234 69           .table:			db		.noShift-.table
+ 95+  8235 71           				db		.shift1-.table
+ 96+  8236 7B           				db		.shift2-.table
+ 97+  8237 87           				db		.shift3-.table
+ 98+  8238 94           				db		.shift4-.table
+ 99+  8239 A2           				db		.shift5-.table
+100+  823A AF           				db		.shift6-.table
+101+  823B BB           				db		.shift7-.table
+102+  823C 09           				db		.empty-.table
+103+  823D
+104+  823D AF           .empty:       	xor		a
+105+  823E 77           				ld      (hl), a
+106+  823F 24                           inc     h
+107+  8240 10 FB                        djnz    .empty
+108+  8242 C3 F8 82                     jp		.charDone
+109+  8245
+110+  8245 1A           .shiftM7:       ld      a, (de)
+111+  8246 0F           				rrca
+112+  8247 E6 80        				and		0x80
+113+  8249 77                           ld      (hl), a
+114+  824A 14                           inc     d
+115+  824B 24                           inc     h
+116+  824C 10 F7                        djnz    .shiftM7
+117+  824E C3 F8 82                     jp		.charDone
+118+  8251
+119+  8251 1A           .shiftM6:       ld      a, (de)
+120+  8252 0F           				rrca
+121+  8253 0F           				rrca
+122+  8254 E6 C0        				and		0xc0
+123+  8256 77                           ld      (hl), a
+124+  8257 14                           inc     d
+125+  8258 24                           inc     h
+126+  8259 10 F6                        djnz    .shiftM6
+127+  825B C3 F8 82                     jp		.charDone
+128+  825E
+129+  825E 1A           .shiftM5:       ld      a, (de)
+130+  825F              				dup		3
+131+  825F 0F          >				rrca
+131+  8260 0F          >				rrca
+131+  8261 0F          >				rrca
+132+  8262              				edup
+133+  8262 E6 E0        				and		0xe0
+134+  8264 77                           ld      (hl), a
+135+  8265 14                           inc     d
+136+  8266 24                           inc     h
+137+  8267 10 F5                        djnz    .shiftM5
+138+  8269 C3 F8 82                     jp		.charDone
+139+  826C
+140+  826C 1A           .shiftM4:       ld      a, (de)
+141+  826D              				dup		4
+142+  826D 07          >				rlca
+142+  826E 07          >				rlca
+142+  826F 07          >				rlca
+142+  8270 07          >				rlca
+143+  8271              				edup
+144+  8271 E6 F0        				and		0xf0
+145+  8273 77                           ld      (hl), a
+146+  8274 14                           inc     d
+147+  8275 24                           inc     h
+148+  8276 10 F4                        djnz    .shiftM4
+149+  8278 18 7E                        jr		.charDone
+150+  827A
+151+  827A 1A           .shiftM3:       ld      a, (de)
+152+  827B              				dup		3
+153+  827B 07          >				rlca
+153+  827C 07          >				rlca
+153+  827D 07          >				rlca
+154+  827E              				edup
+155+  827E E6 F8        				and		0xf8
+156+  8280 77                           ld      (hl), a
+157+  8281 14                           inc     d
+158+  8282 24                           inc     h
+159+  8283 10 F5                        djnz    .shiftM3
+160+  8285 18 71                        jr		.charDone
+161+  8287
+162+  8287 1A           .shiftM2:       ld      a, (de)
+163+  8288 07           				rlca
+164+  8289 07           				rlca
+165+  828A E6 FC        				and		0xfc
+166+  828C 77                           ld      (hl), a
+167+  828D 14                           inc     d
+168+  828E 24                           inc     h
+169+  828F 10 F6                        djnz    .shiftM2
+170+  8291 18 65                        jr		.charDone
+171+  8293
+172+  8293 1A           .shiftM1:       ld      a, (de)
+173+  8294 CB 27        				sla		a
+174+  8296 77                           ld      (hl), a
+175+  8297 14                           inc     d
+176+  8298 24                           inc     h
+177+  8299 10 F8                        djnz    .shiftM1
+178+  829B 18 5B                        jr		.charDone
+179+  829D
+180+  829D 1A           .noShift:       ld      a, (de)
+181+  829E 77                           ld      (hl), a
+182+  829F 14                           inc     d
+183+  82A0 24                           inc     h
+184+  82A1 10 FA                        djnz    .noShift
+185+  82A3 18 53                        jr		.charDone
+186+  82A5
+187+  82A5 1A           .shift1:       	ld      a, (de)
+188+  82A6 CB 3F        				srl		a
+189+  82A8 77                           ld      (hl), a
+190+  82A9 14                           inc     d
+191+  82AA 24                           inc     h
+192+  82AB 10 F8                        djnz    .shift1
+193+  82AD 18 49                        jr		.charDone
+194+  82AF
+195+  82AF 1A           .shift2:       	ld      a, (de)
+196+  82B0 0F           				rrca
+197+  82B1 0F           				rrca
+198+  82B2 E6 3F        				and		0x3f
+199+  82B4 77                           ld      (hl), a
+200+  82B5 14                           inc     d
+201+  82B6 24                           inc     h
+202+  82B7 10 F6                        djnz    .shift2
+203+  82B9 18 3D                        jr		.charDone
+204+  82BB
+205+  82BB 1A           .shift3:       	ld      a, (de)
+206+  82BC              				dup		3
+207+  82BC 0F          >				rrca
+207+  82BD 0F          >				rrca
+207+  82BE 0F          >				rrca
+208+  82BF              				edup
+209+  82BF E6 1F        				and		0x1f
+210+  82C1 77                           ld      (hl), a
+211+  82C2 14                           inc     d
+212+  82C3 24                           inc     h
+213+  82C4 10 F5                        djnz    .shift3
+214+  82C6 18 30                        jr		.charDone
+215+  82C8
+216+  82C8 1A           .shift4:       	ld      a, (de)
+217+  82C9              				dup		4
+218+  82C9 0F          >				rrca
+218+  82CA 0F          >				rrca
+218+  82CB 0F          >				rrca
+218+  82CC 0F          >				rrca
+219+  82CD              				edup
+220+  82CD E6 0F        				and		0x0f
+221+  82CF 77                           ld      (hl), a
+222+  82D0 14                           inc     d
+223+  82D1 24                           inc     h
+224+  82D2 10 F4                        djnz    .shift4
+225+  82D4 18 22                        jr		.charDone
+226+  82D6
+227+  82D6 1A           .shift5:       	ld      a, (de)
+228+  82D7              				dup		3
+229+  82D7 07          >				rlca
+229+  82D8 07          >				rlca
+229+  82D9 07          >				rlca
+230+  82DA              				edup
+231+  82DA E6 07        				and		0x07
+232+  82DC 77                           ld      (hl), a
+233+  82DD 14                           inc     d
+234+  82DE 24                           inc     h
+235+  82DF 10 F5                        djnz    .shift5
+236+  82E1 18 15                        jr		.charDone
+237+  82E3
+238+  82E3 1A           .shift6:       	ld      a, (de)
+239+  82E4              				dup		2
+240+  82E4 07          >				rlca
+240+  82E5 07          >				rlca
+241+  82E6              				edup
+242+  82E6 E6 03        				and		0x03
+243+  82E8 77                           ld      (hl), a
+244+  82E9 14                           inc     d
+245+  82EA 24                           inc     h
+246+  82EB 10 F6                        djnz    .shift6
+247+  82ED 18 09                        jr		.charDone
+248+  82EF
+249+  82EF 1A           .shift7:       	ld      a, (de)
+250+  82F0 07           				rlca
+251+  82F1 E6 01        				and		0x01
+252+  82F3 77                           ld      (hl), a
+253+  82F4 14                           inc     d
+254+  82F5 24                           inc     h
+255+  82F6 10 F7                        djnz    .shift7
+256+  82F8                              ;jr		.charDone
+257+  82F8
+258+  82F8              .charDone: 		; Расчитываем адрес в области атрибутов
+259+  82F8 25                			dec     h
+260+  82F9 7C                           ld      a, h
+261+  82FA 1F                           rra
+262+  82FB 1F                           rra
+263+  82FC 1F                           rra
+264+  82FD E6 03                        and     0x03
+265+  82FF F6 58                        or      0x58
+266+  8301 67                           ld      h, a
+267+  8302                              ; Восстанавливаем A
+268+  8302 08                           ex      af, af'
+269+  8303                              ; Записываем атрибут
+270+  8303 77                           ld      (hl), a
+271+  8304 C9                           ret
+272+  8305
+# file closed: draw.asm
+ 40   8305              					include		"input.asm"
+# file opened: input.asm
+  1+  8305
+  2+  8305 01 FE FB     ReadInput:			ld			bc, 0xfbfe
+  3+  8308 ED 78        					in			a, (c)
+  4+  830A E6 01        					and			1					; Q
+  5+  830C 32 37 83     					ld			(Input.up), a
+  6+  830F
+  7+  830F 01 FE FD     					ld			bc, 0xfdfe
+  8+  8312 ED 78        					in			a, (c)
+  9+  8314 E6 01        					and			1					; A
+ 10+  8316 32 38 83     					ld			(Input.down), a
+ 11+  8319
+ 12+  8319 01 FE DF     					ld			bc, 0xdffe
+ 13+  831C ED 78        					in			a, (c)
+ 14+  831E 47           					ld			b, a
+ 15+  831F E6 02        					and			2					; O
+ 16+  8321 32 35 83     					ld			(Input.left), a
+ 17+  8324
+ 18+  8324 78           					ld			a, b
+ 19+  8325 E6 01        					and			1					; P
+ 20+  8327 32 36 83     					ld			(Input.right), a
+ 21+  832A
+ 22+  832A 01 FE 7F     					ld			bc, 0x7ffe
+ 23+  832D ED 78        					in			a, (c)
+ 24+  832F E6 01        					and			1					; Space
+ 25+  8331 32 39 83     					ld			(Input.fire), a
+ 26+  8334
+ 27+  8334 C9           					ret
+ 28+  8335
+ 29+  8335              Input:
+ 30+  8335 01           .left:				db			1
+ 31+  8336 01           .right:				db			1
+ 32+  8337 01           .up:				db			1
+ 33+  8338 01           .down:				db			1
+ 34+  8339 01           .fire:				db			1
+ 35+  833A
+# file closed: input.asm
+ 41   833A              					include		"player.asm"
+# file opened: player.asm
+  1+  833A
+  2+  833A              PLAYER_IDLE			equ			0
+  3+  833A              PLAYER_GO_LEFT		equ			2
+  4+  833A              PLAYER_GO_RIGHT		equ			4
+  5+  833A              PLAYER_GO_UP		equ			6
+  6+  833A              PLAYER_GO_DOWN		equ			8
+  7+  833A
+  8+  833A              PLAYER_MAX_X		equ 		31
+  9+  833A              PLAYER_MAX_Y		equ			23
+ 10+  833A
+ 11+  833A              PLAYER_MOVE_DELAY_BITS equ		1
+ 12+  833A
+ 13+  833A              					struct 		SPLAYER
+ 14+  833A ~            x 					byte
+ 15+  833A ~            y 					byte
+ 16+  833A ~            state				byte
+ 17+  833A ~            time				byte
+ 18+  833A              					ends
+ 19+  833A
+ 20+  833A 05 02 00 00  player1:			SPLAYER		5,2,PLAYER_IDLE,0
+ 21+  833E
+ 22+  833E DD 36 02 00  InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
+ 23+  8342 C9           					ret
+ 24+  8343
+ 25+  8343 DD 4E 00     DrawPlayer:			ld			c, (ix+SPLAYER.x)
+ 26+  8346 DD 46 01     					ld			b, (ix+SPLAYER.y)
+ 27+  8349
+ 28+  8349 DD 6E 02     					ld			l, (ix+SPLAYER.state)
+ 29+  834C 26 00        					ld			h, 0
+ 30+  834E 11 53 83     					ld			de, .jumpTable
+ 31+  8351 19           					add			hl, de
+ 32+  8352 E9           					jp			(hl)
+ 33+  8353 18 08        .jumpTable:			jr			.drawIdle
+ 34+  8355 18 0F        					jr			.drawLeft
+ 35+  8357 18 33        					jr			.drawRight
+ 36+  8359 18 7A        					jr			.drawUp
+ 37+  835B 18 54        					jr			.drawDown
+ 38+  835D
+ 39+  835D 21 00 00     .drawIdle:			ld			hl, 0x0000
+ 40+  8360 3E 47        					ld			a, 0x47
+ 41+  8362 5C           					ld			e, h
+ 42+  8363 C3 09 82     					jp			DrawChar
+ 43+  8366
+ 44+  8366 DD 7E 03     .drawLeft:			ld			a, (ix+SPLAYER.time)
+ 45+  8369              					dup			PLAYER_MOVE_DELAY_BITS
+ 46+  8369 0F          >					rrca
+ 47+  836A              					edup
+ 48+  836A E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+ 49+  836C 3C           					inc			a
+ 50+  836D ED 44        					neg
+ 51+  836F 5F           					ld			e, a
+ 52+  8370 0F           					rrca
+ 53+  8371 E6 01        					and			1
+ 54+  8373 3C           					inc			a
+ 55+  8374 6F           					ld			l, a
+ 56+  8375 26 00        					ld			h, 0
+ 57+  8377
+ 58+  8377 E5           					push		hl
+ 59+  8378 D5           					push		de
+ 60+  8379 C5           					push		bc
+ 61+  837A 3E 47        					ld			a, 0x47
+ 62+  837C 0C           					inc			c
+ 63+  837D CD 09 82     					call		DrawChar
+ 64+  8380 C1           					pop			bc
+ 65+  8381 D1           					pop			de
+ 66+  8382 E1           					pop			hl
+ 67+  8383
+ 68+  8383 08           					ex			af, af'
+ 69+  8384 3E 08        					ld			a, 8
+ 70+  8386 83           					add			a, e
+ 71+  8387 5F           					ld			e, a
+ 72+  8388 08           					ex			af, af'
+ 73+  8389 C3 09 82     					jp			DrawChar
+ 74+  838C
+ 75+  838C DD 7E 03     .drawRight:			ld			a, (ix+SPLAYER.time)
+ 76+  838F              					dup			PLAYER_MOVE_DELAY_BITS
+ 77+  838F 0F          >					rrca
+ 78+  8390              					edup
+ 79+  8390 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+ 80+  8392 3C           					inc			a
+ 81+  8393 5F           					ld			e, a
+ 82+  8394 0F           					rrca
+ 83+  8395 E6 01        					and			1
+ 84+  8397 C6 03        					add			a, 3
+ 85+  8399 6F           					ld			l, a
+ 86+  839A 26 00        					ld			h, 0
+ 87+  839C
+ 88+  839C E5           					push		hl
+ 89+  839D D5           					push		de
+ 90+  839E C5           					push		bc
+ 91+  839F 3E 47        					ld			a, 0x47
+ 92+  83A1 0D           					dec			c
+ 93+  83A2 CD 09 82     					call		DrawChar
+ 94+  83A5 C1           					pop			bc
+ 95+  83A6 D1           					pop			de
+ 96+  83A7 E1           					pop			hl
+ 97+  83A8
+ 98+  83A8 08           					ex			af, af'
+ 99+  83A9 7B           					ld			a, e
+100+  83AA D6 08        					sub			8
+101+  83AC 5F           					ld			e, a
+102+  83AD 08           					ex			af, af'
+103+  83AE C3 09 82     					jp			DrawChar
+104+  83B1
+105+  83B1 DD 7E 03     .drawDown:			ld			a, (ix+SPLAYER.time)
+106+  83B4              					dup			PLAYER_MOVE_DELAY_BITS
+107+  83B4 0F          >					rrca
+108+  83B5              					edup
+109+  83B5 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+110+  83B7 3C           					inc			a
+111+  83B8 5F           					ld			e, a
+112+  83B9 E6 03        					and			3
+113+  83BB C6 05        					add			a, 5
+114+  83BD 6F           					ld			l, a
+115+  83BE 26 00        					ld			h, 0
+116+  83C0
+117+  83C0 E5           					push		hl
+118+  83C1 D5           					push		de
+119+  83C2 C5           					push		bc
+120+  83C3 3E 47        					ld			a, 0x47
+121+  83C5 1E 08        				ld e, 8
+122+  83C7 05           					dec			b
+123+  83C8 CD 09 82     					call		DrawChar
+124+  83CB C1           					pop			bc
+125+  83CC D1           					pop			de
+126+  83CD E1           					pop			hl
+127+  83CE
+128+  83CE 08           					ex			af, af'
+129+  83CF              					;ld			a, e
+130+  83CF              					;sub			8
+131+  83CF              					;ld			e, a
+132+  83CF 1E 00        				ld e, 0
+133+  83D1 08           					ex			af, af'
+134+  83D2 C3 09 82     					jp			DrawChar
+135+  83D5
+136+  83D5 DD 7E 03     .drawUp:			ld			a, (ix+SPLAYER.time)
+137+  83D8              					dup			PLAYER_MOVE_DELAY_BITS
+138+  83D8 0F          >					rrca
+139+  83D9              					edup
+140+  83D9 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+141+  83DB 3C           					inc			a
+142+  83DC 5F           					ld			e, a
+143+  83DD E6 03        					and			3
+144+  83DF C6 05        					add			a, 5
+145+  83E1 6F           					ld			l, a
+146+  83E2 26 00        					ld			h, 0
+147+  83E4
+148+  83E4 E5           					push		hl
+149+  83E5 D5           					push		de
+150+  83E6 C5           					push		bc
+151+  83E7 3E 47        					ld			a, 0x47
+152+  83E9 04           					inc			b
+153+  83EA 1E 08        				ld e, 8
+154+  83EC CD 09 82     					call		DrawChar
+155+  83EF C1           					pop			bc
+156+  83F0 D1           					pop			de
+157+  83F1 E1           					pop			hl
+158+  83F2
+159+  83F2 08           					ex			af, af'
+160+  83F3              					;ld			a, e
+161+  83F3              					;sub			8
+162+  83F3              					;ld			e, a
+163+  83F3 1E 00        				ld e, 0
+164+  83F5 08           					ex			af, af'
+165+  83F6 C3 09 82     					jp			DrawChar
+166+  83F9
+167+  83F9 DD 6E 02     HandlePlayer:		ld			l, (ix+SPLAYER.state)
+168+  83FC 26 00        					ld			h, 0
+169+  83FE 01 03 84     					ld			bc, .jumpTable
+170+  8401 09           					add			hl, bc
+171+  8402 E9           					jp			(hl)
+172+  8403 18 1C        .jumpTable:			jr			.idle
+173+  8405 18 06        					jr			.move
+174+  8407 18 04        					jr			.move
+175+  8409 18 02        					jr			.move
+176+  840B 18 00        					jr			.move
+177+  840D
+178+  840D DD 7E 03     .move:				ld			a, (ix+SPLAYER.time)
+179+  8410 3C           					inc			a
+180+  8411 FE 10        					cp			(8<<PLAYER_MOVE_DELAY_BITS)
+181+  8413 28 04        					jr			z, .moveDone
+182+  8415 DD 77 03     					ld			(ix+SPLAYER.time), a
+183+  8418 C9           					ret
+184+  8419 DD 36 02 00  .moveDone:			ld			(ix+SPLAYER.state), PLAYER_IDLE
+185+  841D DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+186+  8421              					;jr			.idle
+187+  8421
+188+  8421 21 35 83     .idle:				ld			hl, Input.left
+189+  8424 AF           					xor			a
+190+  8425 BE           					cp			(hl)
+191+  8426 28 0D        					jr			z, .goLeft
+192+  8428
+193+  8428 23           					inc			hl
+194+  8429 BE           					cp			(hl)
+195+  842A 28 1A        					jr			z, .goRight
+196+  842C
+197+  842C 23           					inc			hl
+198+  842D BE           					cp			(hl)
+199+  842E 28 28        					jr			z, .goUp
+200+  8430
+201+  8430 23           					inc			hl
+202+  8431 BE           					cp			(hl)
+203+  8432 28 35        					jr			z, .goDown
+204+  8434
+205+  8434 C9           					ret
+206+  8435
+207+  8435 DD 7E 00     .goLeft:			ld			a, (ix+SPLAYER.x)
+208+  8438 B7           					or			a
+209+  8439 C8           					ret			z
+210+  843A DD 35 00     					dec			(ix+SPLAYER.x)
+211+  843D DD 36 02 02  					ld			(ix+SPLAYER.state), PLAYER_GO_LEFT
+212+  8441 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+213+  8445 C9           					ret
+214+  8446
+215+  8446 DD 7E 00     .goRight:			ld			a, (ix+SPLAYER.x)
+216+  8449 FE 1F        					cp			PLAYER_MAX_X
+217+  844B C8           					ret			z
+218+  844C DD 34 00     					inc			(ix+SPLAYER.x)
+219+  844F DD 36 02 04  					ld			(ix+SPLAYER.state), PLAYER_GO_RIGHT
+220+  8453 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+221+  8457 C9           					ret
+222+  8458
+223+  8458 DD 7E 01     .goUp:				ld			a, (ix+SPLAYER.y)
+224+  845B B7           					or			a
+225+  845C C8           					ret			z
+226+  845D DD 35 01     					dec			(ix+SPLAYER.y)
+227+  8460 DD 36 02 06  					ld			(ix+SPLAYER.state), PLAYER_GO_UP
+228+  8464 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+229+  8468 C9           					ret
+230+  8469
+231+  8469 DD 7E 01     .goDown:			ld			a, (ix+SPLAYER.y)
+232+  846C FE 17        					cp			PLAYER_MAX_Y
+233+  846E C8           					ret			z
+234+  846F DD 34 01     					inc			(ix+SPLAYER.y)
+235+  8472 DD 36 02 08  					ld			(ix+SPLAYER.state), PLAYER_GO_DOWN
+236+  8476 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+237+  847A C9           					ret
+238+  847B
+# file closed: player.asm
+ 42   847B
+ 43   847B 00 00 00...  					ds			0xa000-$
+ 44   A000              					org			0xa000
+ 45   A000
+ 46   A000              gfx:				incbin		"gfx/gfx.scr"
+ 47   BB00
+ 48   BB00              					savesna 	"game.sna", start
+ 49   BB00              					SLDOPT 		COMMENT WPMEM, LOGPOINT, ASSERTION
+ 50   BB00
+# file closed: game.asm
