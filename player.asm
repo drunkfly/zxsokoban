@@ -10,7 +10,7 @@ PLAYER_MAX_Y		equ			23
 
 PLAYER_MOVE_DELAY_BITS equ		1
 
-PLAYER_ATTR			equ			0x4f
+PLAYER_ATTR			equ			FLOOR_ATTR
 
 					struct 		SPLAYER
 x 					byte
@@ -189,33 +189,41 @@ HandlePlayer:		ld			l, (ix+SPLAYER.state)
 
 					ret
 
-.goLeft:			ld			a, (ix+SPLAYER.x)
-					or			a
-					ret			z
+.goLeft:			ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					dec			c
+					call		CheckBlocked
+					ret			nz
 					dec			(ix+SPLAYER.x)
 					ld			(ix+SPLAYER.state), PLAYER_GO_LEFT
 					ld			(ix+SPLAYER.time), 0
 					ret
 
-.goRight:			ld			a, (ix+SPLAYER.x)
-					cp			PLAYER_MAX_X
-					ret			z
+.goRight:			ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					inc			c
+					call		CheckBlocked
+					ret			nz
 					inc			(ix+SPLAYER.x)
 					ld			(ix+SPLAYER.state), PLAYER_GO_RIGHT
 					ld			(ix+SPLAYER.time), 0
 					ret
 
-.goUp:				ld			a, (ix+SPLAYER.y)
-					or			a
-					ret			z
+.goUp:				ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					dec			b
+					call		CheckBlocked
+					ret			nz
 					dec			(ix+SPLAYER.y)
 					ld			(ix+SPLAYER.state), PLAYER_GO_UP
 					ld			(ix+SPLAYER.time), 0
 					ret
 
-.goDown:			ld			a, (ix+SPLAYER.y)
-					cp			PLAYER_MAX_Y
-					ret			z
+.goDown:			ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					inc			b
+					call		CheckBlocked
+					ret			nz
 					inc			(ix+SPLAYER.y)
 					ld			(ix+SPLAYER.state), PLAYER_GO_DOWN
 					ld			(ix+SPLAYER.time), 0

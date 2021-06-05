@@ -15,6 +15,9 @@ start:				di
 					ld			a, 00h
 					call		ClearScreen
 
+					call		InitLevel
+					call		DrawLevel
+
 					ld			ix, player1
 					call		InitPlayer
 
@@ -38,6 +41,7 @@ FramesPending:		db			0
 
 					include		"draw.asm"
 					include		"input.asm"
+					include		"level.asm"
 					include		"player.asm"
 
 					ds			0xa000-$

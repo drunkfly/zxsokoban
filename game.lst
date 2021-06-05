@@ -288,13 +288,13 @@
  24+  818B DD E5        					push		ix
  25+  818D FD E5        					push		iy
  26+  818F
- 27+  818F 21 D8 81     					ld			hl, FramesPending
+ 27+  818F 21 DE 81     					ld			hl, FramesPending
  28+  8192 34           					inc			(hl)
  29+  8193
  30+  8193              					; рисуем спрайты
  31+  8193
- 32+  8193 DD 21 8A 83  					ld			ix, player1
- 33+  8197 CD 93 83     					call		DrawPlayer
+ 32+  8193 DD 21 7A 86  					ld			ix, player1
+ 33+  8197 CD 83 86     					call		DrawPlayer
  34+  819A
  35+  819A              					; готово
  36+  819A
@@ -323,645 +323,913 @@
  13   81B4 FB           					ei
  14   81B5
  15   81B5 3E 00        					ld			a, 00h
- 16   81B7 CD D9 81     					call		ClearScreen
+ 16   81B7 CD DF 81     					call		ClearScreen
  17   81BA
- 18   81BA DD 21 8A 83  					ld			ix, player1
- 19   81BE CD 8E 83     					call		InitPlayer
- 20   81C1
- 21   81C1 21 D8 81     .mainLoop:			ld			hl, FramesPending
- 22   81C4 AF           					xor			a
- 23   81C5 BE           					cp			(hl)
- 24   81C6 28 0D        					jr			z, .halt
- 25   81C8 35           					dec			(hl)
- 26   81C9
- 27   81C9 CD 55 83     					call		ReadInput
- 28   81CC
- 29   81CC DD 21 8A 83  					ld			ix, player1
- 30   81D0 CD 3D 84     					call		HandlePlayer
- 31   81D3
- 32   81D3 18 EC        					jr			.mainLoop
- 33   81D5
- 34   81D5 76           .halt:				halt
- 35   81D6 18 E9        					jr			.mainLoop
- 36   81D8
- 37   81D8 00           FramesPending:		db			0
- 38   81D9
- 39   81D9              					include		"draw.asm"
+ 18   81BA CD 10 86     					call		InitLevel
+ 19   81BD CD 31 86     					call		DrawLevel
+ 20   81C0
+ 21   81C0 DD 21 7A 86  					ld			ix, player1
+ 22   81C4 CD 7E 86     					call		InitPlayer
+ 23   81C7
+ 24   81C7 21 DE 81     .mainLoop:			ld			hl, FramesPending
+ 25   81CA AF           					xor			a
+ 26   81CB BE           					cp			(hl)
+ 27   81CC 28 0D        					jr			z, .halt
+ 28   81CE 35           					dec			(hl)
+ 29   81CF
+ 30   81CF CD 5B 83     					call		ReadInput
+ 31   81D2
+ 32   81D2 DD 21 7A 86  					ld			ix, player1
+ 33   81D6 CD 2D 87     					call		HandlePlayer
+ 34   81D9
+ 35   81D9 18 EC        					jr			.mainLoop
+ 36   81DB
+ 37   81DB 76           .halt:				halt
+ 38   81DC 18 E9        					jr			.mainLoop
+ 39   81DE
+ 40   81DE 00           FramesPending:		db			0
+ 41   81DF
+ 42   81DF              					include		"draw.asm"
 # file opened: draw.asm
-  1+  81D9
-  2+  81D9              				; Input:
-  3+  81D9              				;   A = attribute
-  4+  81D9
-  5+  81D9              ClearScreen:	; очищаем пиксели
-  6+  81D9 21 00 40     				ld		hl, 4000h
-  7+  81DC 5D           				ld      e, l
-  8+  81DD 54           				ld		d, h
-  9+  81DE 36 00        				ld		(hl), 0
- 10+  81E0 13           				inc		de
- 11+  81E1 01 00 18     				ld		bc, 1800h
- 12+  81E4 ED B0        				ldir
- 13+  81E6              				; очищаем атрибуты
- 14+  81E6 77           				ld		(hl), a
- 15+  81E7 01 FF 02     				ld		bc, 300h-1
- 16+  81EA ED B0        				ldir
- 17+  81EC C9           				ret
- 18+  81ED
- 19+  81ED                              ; Input:
- 20+  81ED                              ;   C = X
- 21+  81ED                              ;   B = Y (знакоместо)
- 22+  81ED                              ;   IYH = старший байт адреса
- 23+  81ED                              ; Output:
- 24+  81ED                              ;   DE => screen addr
- 25+  81ED
- 26+  81ED              CalcScreenAddr: ; Преобразуем координату Y в пикселях в значение в знакоместах
- 27+  81ED 78                           ld		a, b
- 28+  81EE 17                           rla
- 29+  81EF 17                           rla
- 30+  81F0 17                           rla
- 31+  81F1 E6 F8                        and		0xf8
- 32+  81F3              ; альтернативная точка входа, A = Y (пиксели)
- 33+  81F3              CalcScreenAddrPix:
- 34+  81F3 47                           ld		b, a
- 35+  81F4                              ; Расчитываем адрес на экране
- 36+  81F4 17                           rla                                 ; A = ? |Y5|Y4|Y3| ?| ?| ?| ?
- 37+  81F5 17                           rla                                 ; A = Y5|Y4|Y3| ?| ?| ?| ?| ?
- 38+  81F6 E6 E0                        and     0xe0            ; 1110 0000 ; A = Y5|Y4|Y3| 0| 0| 0| 0| 0
- 39+  81F8 B1                           or      c               ;             A = Y5|Y4|Y3|X4|X3|X2|X1|X0
- 40+  81F9 5F                           ld      e, a
- 41+  81FA 78                           ld      a, b
- 42+  81FB 1F                           rra
- 43+  81FC 1F                           rra
- 44+  81FD 1F                           rra                                 ; A =  ?| ?| ?|Y7|Y6| ?| ?| ?
- 45+  81FE E6 18                        and     0x18                        ; A =  0| 0| 0|Y7|Y6| 0| 0| 0
- 46+  8200 57                           ld      d, a
- 47+  8201 78                           ld      a, b
- 48+  8202 E6 07                        and     0x07                        ; A =  0| 0| 0| 0| 0|Y2|Y1|Y0
- 49+  8204 B2                           or      d                           ; A =  0| 0| 0|Y7|Y6|Y2|Y1|Y0
- 50+  8205 FD B4                        or      iyh                         ; A =  0| 1| 0|Y7|Y6|Y2|Y1|Y0
- 51+  8207 57                           ld      d, a
- 52+  8208 C9                           ret
- 53+  8209
- 54+  8209                              ; Input:
- 55+  8209                              ;   C = X (знакоместо)
- 56+  8209                              ;   B = Y (знакоместо)
- 57+  8209                              ;   D = дополнительный сдвиг по Y (-7..7)
- 58+  8209
- 59+  8209              DrawEmptyByte:	; Расчитываем адрес назначения
- 60+  8209 FD 26 40                     ld		iyh, 0x40
- 61+  820C 78                           ld		a, b
- 62+  820D 87                           add		a, a		; *2
- 63+  820E 87                           add		a, a		; *4
- 64+  820F 87                           add		a, a		; *8
- 65+  8210 82                           add		a, d
- 66+  8211 CD F3 81         			call    CalcScreenAddrPix
- 67+  8214                  			; Записываем нулевой байт
- 68+  8214 AF               			xor		a
- 69+  8215 12               			ld		(de), a
- 70+  8216 C9               			ret
- 71+  8217
- 72+  8217                              ; Input:
- 73+  8217                              ;	A = атрибут
- 74+  8217                              ;   E = дополнительный сдвиг по X (-7..7)
- 75+  8217                              ;   D = дополнительный сдвиг по Y (-7..7)
- 76+  8217                              ;   L = X спрайта (знакоместо)
- 77+  8217                              ;   H = Y спрайта (знакоместо)
- 78+  8217                              ;   C = X (знакоместо)
- 79+  8217                              ;   B = Y (знакоместо)
- 80+  8217
- 81+  8217              DrawChar:    	; Сохраняем А
- 82+  8217 08                           ex      af, af'
- 83+  8218                              ; Патчим код
- 84+  8218 7B                           ld		a, e
- 85+  8219 32 37 82                     ld		(.hotPatch+2), a
- 86+  821C              				; Расчитываем адрес назначения
- 87+  821C FD 26 40                     ld		iyh, 0x40
- 88+  821F 78                           ld		a, b
- 89+  8220 87                           add		a, a		; *2
- 90+  8221 87                           add		a, a		; *4
- 91+  8222 87                           add		a, a		; *8
- 92+  8223 82                           add		a, d
- 93+  8224 CD F3 81         			call    CalcScreenAddrPix
- 94+  8227 D5                           push	de
- 95+  8228                              ; Преобразуем координату Y спрайта в адрес в SCR
- 96+  8228 44                           ld		b, h
- 97+  8229 4D                           ld		c, l
- 98+  822A EB                           ex		de, hl		; сохраню DE в HL
- 99+  822B                              ; Расчитываем адрес спрайта
-100+  822B FD 26 A0                     ld		iyh, high gfx
-101+  822E CD ED 81                     call	CalcScreenAddr
-102+  8231
-103+  8231 FD 21 48 82  				ld		iy, .table
-104+  8235 FD 4E 00     .hotPatch:		ld		c, (iy+0)
-105+  8238 06 00        				ld		b, 0
-106+  823A FD 09        				add		iy, bc
-107+  823C 06 08                        ld      b, 8		; счетчик для цикла
-108+  823E FD E9        				jp		(iy)
-109+  8240
-110+  8240 09           				db		.empty-.table
-111+  8241 13           				db		.shiftM7-.table
-112+  8242 21           				db		.shiftM6-.table
-113+  8243 30           				db		.shiftM5-.table
-114+  8244 40           				db		.shiftM4-.table
-115+  8245 51           				db		.shiftM3-.table
-116+  8246 61           				db		.shiftM2-.table
-117+  8247 6F           				db		.shiftM1-.table
-118+  8248 7B           .table:			db		.noShift-.table
-119+  8249 85           				db		.shift1-.table
-120+  824A 91           				db		.shift2-.table
-121+  824B 9F           				db		.shift3-.table
-122+  824C AE           				db		.shift4-.table
-123+  824D BE           				db		.shift5-.table
-124+  824E CD           				db		.shift6-.table
-125+  824F DB           				db		.shift7-.table
-126+  8250 09           				db		.empty-.table
-127+  8251
-128+  8251 AF           .empty:       	xor		a
-129+  8252 77           				ld      (hl), a
-130+  8253 CD 46 83                     call	DownHL
-131+  8256 10 F9                        djnz    .empty
-132+  8258 C3 2E 83                     jp		.charDone
-133+  825B
-134+  825B 1A           .shiftM7:       ld      a, (de)
-135+  825C 0F           				rrca
-136+  825D E6 80        				and		0x80
-137+  825F 77                           ld      (hl), a
-138+  8260 14                           inc     d
-139+  8261 CD 46 83                     call	DownHL
-140+  8264 10 F5                        djnz    .shiftM7
-141+  8266 C3 2E 83                     jp		.charDone
-142+  8269
-143+  8269 1A           .shiftM6:       ld      a, (de)
-144+  826A 0F           				rrca
-145+  826B 0F           				rrca
-146+  826C E6 C0        				and		0xc0
-147+  826E 77                           ld      (hl), a
-148+  826F 14                           inc     d
-149+  8270 CD 46 83                     call	DownHL
-150+  8273 10 F4                        djnz    .shiftM6
-151+  8275 C3 2E 83                     jp		.charDone
-152+  8278
-153+  8278 1A           .shiftM5:       ld      a, (de)
-154+  8279              				dup		3
-155+  8279 0F          >				rrca
-155+  827A 0F          >				rrca
-155+  827B 0F          >				rrca
-156+  827C              				edup
-157+  827C E6 E0        				and		0xe0
-158+  827E 77                           ld      (hl), a
-159+  827F 14                           inc     d
-160+  8280 CD 46 83                     call	DownHL
-161+  8283 10 F3                        djnz    .shiftM5
-162+  8285 C3 2E 83                     jp		.charDone
-163+  8288
-164+  8288 1A           .shiftM4:       ld      a, (de)
-165+  8289              				dup		4
-166+  8289 07          >				rlca
-166+  828A 07          >				rlca
-166+  828B 07          >				rlca
-166+  828C 07          >				rlca
-167+  828D              				edup
-168+  828D E6 F0        				and		0xf0
-169+  828F 77                           ld      (hl), a
-170+  8290 14                           inc     d
-171+  8291 CD 46 83                     call	DownHL
-172+  8294 10 F2                        djnz    .shiftM4
-173+  8296 C3 2E 83                     jp		.charDone
-174+  8299
-175+  8299 1A           .shiftM3:       ld      a, (de)
-176+  829A              				dup		3
-177+  829A 07          >				rlca
-177+  829B 07          >				rlca
-177+  829C 07          >				rlca
-178+  829D              				edup
-179+  829D E6 F8        				and		0xf8
-180+  829F 77                           ld      (hl), a
-181+  82A0 14                           inc     d
-182+  82A1 CD 46 83                     call	DownHL
-183+  82A4 10 F3                        djnz    .shiftM3
-184+  82A6 C3 2E 83                     jp		.charDone
-185+  82A9
-186+  82A9 1A           .shiftM2:       ld      a, (de)
-187+  82AA 07           				rlca
-188+  82AB 07           				rlca
-189+  82AC E6 FC        				and		0xfc
-190+  82AE 77                           ld      (hl), a
-191+  82AF 14                           inc     d
-192+  82B0 CD 46 83                     call	DownHL
-193+  82B3 10 F4                        djnz    .shiftM2
-194+  82B5 18 77                        jr		.charDone
-195+  82B7
-196+  82B7 1A           .shiftM1:       ld      a, (de)
-197+  82B8 CB 27        				sla		a
-198+  82BA 77                           ld      (hl), a
-199+  82BB 14                           inc     d
-200+  82BC CD 46 83                     call	DownHL
-201+  82BF 10 F6                        djnz    .shiftM1
-202+  82C1 18 6B                        jr		.charDone
-203+  82C3
-204+  82C3 1A           .noShift:       ld      a, (de)
-205+  82C4 77                           ld      (hl), a
-206+  82C5 14                           inc     d
-207+  82C6 CD 46 83                     call	DownHL
-208+  82C9 10 F8                        djnz    .noShift
-209+  82CB 18 61                        jr		.charDone
-210+  82CD
-211+  82CD 1A           .shift1:       	ld      a, (de)
-212+  82CE CB 3F        				srl		a
-213+  82D0 77                           ld      (hl), a
-214+  82D1 14                           inc     d
-215+  82D2 CD 46 83                     call	DownHL
-216+  82D5 10 F6                        djnz    .shift1
-217+  82D7 18 55                        jr		.charDone
-218+  82D9
-219+  82D9 1A           .shift2:       	ld      a, (de)
-220+  82DA 0F           				rrca
-221+  82DB 0F           				rrca
-222+  82DC E6 3F        				and		0x3f
-223+  82DE 77                           ld      (hl), a
-224+  82DF 14                           inc     d
-225+  82E0 CD 46 83                     call	DownHL
-226+  82E3 10 F4                        djnz    .shift2
-227+  82E5 18 47                        jr		.charDone
-228+  82E7
-229+  82E7 1A           .shift3:       	ld      a, (de)
-230+  82E8              				dup		3
-231+  82E8 0F          >				rrca
-231+  82E9 0F          >				rrca
-231+  82EA 0F          >				rrca
-232+  82EB              				edup
-233+  82EB E6 1F        				and		0x1f
-234+  82ED 77                           ld      (hl), a
-235+  82EE 14                           inc     d
-236+  82EF CD 46 83                     call	DownHL
-237+  82F2 10 F3                        djnz    .shift3
-238+  82F4 18 38                        jr		.charDone
-239+  82F6
-240+  82F6 1A           .shift4:       	ld      a, (de)
-241+  82F7              				dup		4
-242+  82F7 0F          >				rrca
-242+  82F8 0F          >				rrca
-242+  82F9 0F          >				rrca
-242+  82FA 0F          >				rrca
-243+  82FB              				edup
-244+  82FB E6 0F        				and		0x0f
-245+  82FD 77                           ld      (hl), a
-246+  82FE 14                           inc     d
-247+  82FF CD 46 83                     call	DownHL
-248+  8302 10 F2                        djnz    .shift4
-249+  8304 18 28                        jr		.charDone
-250+  8306
-251+  8306 1A           .shift5:       	ld      a, (de)
-252+  8307              				dup		3
-253+  8307 07          >				rlca
-253+  8308 07          >				rlca
-253+  8309 07          >				rlca
-254+  830A              				edup
-255+  830A E6 07        				and		0x07
-256+  830C 77                           ld      (hl), a
-257+  830D 14                           inc     d
-258+  830E CD 46 83                     call	DownHL
-259+  8311 10 F3                        djnz    .shift5
-260+  8313 18 19                        jr		.charDone
-261+  8315
-262+  8315 1A           .shift6:       	ld      a, (de)
-263+  8316              				dup		2
-264+  8316 07          >				rlca
-264+  8317 07          >				rlca
-265+  8318              				edup
-266+  8318 E6 03        				and		0x03
-267+  831A 77                           ld      (hl), a
-268+  831B 14                           inc     d
-269+  831C CD 46 83                     call	DownHL
-270+  831F 10 F4                        djnz    .shift6
-271+  8321 18 0B                        jr		.charDone
-272+  8323
-273+  8323 1A           .shift7:       	ld      a, (de)
-274+  8324 07           				rlca
-275+  8325 E6 01        				and		0x01
-276+  8327 77                           ld      (hl), a
-277+  8328 14                           inc     d
-278+  8329 CD 46 83                     call	DownHL
-279+  832C 10 F5                        djnz    .shift7
-280+  832E                              ;jr		.charDone
-281+  832E
-282+  832E              .charDone: 		; Получаем из стека начальный адрес на экране
-283+  832E E1           				pop		hl
-284+  832F 4C           				ld		c, h				; сохраняем старший байт в C для проверки внизу
-285+  8330              				; Расчитываем адрес в области атрибутов
-286+  8330 7C                           ld      a, h
-287+  8331 1F                  			rra
-288+  8332 1F                           rra
-289+  8333 1F                           rra
-290+  8334 E6 03                        and     0x03
-291+  8336 F6 58                        or      0x58
-292+  8338 67                           ld      h, a
-293+  8339                              ; Восстанавливаем A
-294+  8339 08                           ex      af, af'
-295+  833A                              ; Записываем атрибут
-296+  833A 77                           ld      (hl), a
-297+  833B                              ; Сохраняем атрибут в B
-298+  833B 47                           ld		b, a
-299+  833C                              ; Проверяем, нужно ли рисовать второй атрибут
-300+  833C 3E 07                        ld		a, 7
-301+  833E A1                           and		c
-302+  833F C8                           ret		z				; мы на границе знакоместа, второй атрибут не нужен
-303+  8340              				; Переходим на следующую строку в атрибутах
-304+  8340 11 20 00                     ld		de, 32
-305+  8343 19                           add		hl, de
-306+  8344              				; Записываем второй атрибут
-307+  8344 70                           ld		(hl), b
-308+  8345 C9                           ret
-309+  8346
-310+  8346                              ; Input:
-311+  8346                              ;	HL => адрес байта (8 пикселей) на экране
-312+  8346                              ; Output:
-313+  8346                              ;   HL => адрес байта (8 пикселей) в следующей строке (Y = Y + 1)
-314+  8346
-315+  8346 24           DownHL:			inc		h
-316+  8347 3E 07        				ld		a, 00000111b	; 7=8-1;  остаток от деления на 8
-317+  8349 A4           				and		h
-318+  834A C0           				ret		nz
-319+  834B 7D           				ld		a, l			; L = L + 32
-320+  834C D6 E0        				sub		-32
-321+  834E 6F           				ld		l, a
-322+  834F 9F           				sbc		a, a			; 0 = no carry, -1 (0xff 11111111) = was carry
-323+  8350 E6 F8        				and		-8				; 0 = no carry, -8 (0xf8 11111000) = was carry
-324+  8352 84           				add		a, h
-325+  8353 67           				ld		h, a
-326+  8354 C9           				ret
-327+  8355
+  1+  81DF
+  2+  81DF              				; Input:
+  3+  81DF              				;   A = attribute
+  4+  81DF
+  5+  81DF              ClearScreen:	; очищаем пиксели
+  6+  81DF 21 00 40     				ld		hl, 4000h
+  7+  81E2 5D           				ld      e, l
+  8+  81E3 54           				ld		d, h
+  9+  81E4 36 00        				ld		(hl), 0
+ 10+  81E6 13           				inc		de
+ 11+  81E7 01 00 18     				ld		bc, 1800h
+ 12+  81EA ED B0        				ldir
+ 13+  81EC              				; очищаем атрибуты
+ 14+  81EC 77           				ld		(hl), a
+ 15+  81ED 01 FF 02     				ld		bc, 300h-1
+ 16+  81F0 ED B0        				ldir
+ 17+  81F2 C9           				ret
+ 18+  81F3
+ 19+  81F3                              ; Input:
+ 20+  81F3                              ;   C = X
+ 21+  81F3                              ;   B = Y (знакоместо)
+ 22+  81F3                              ;   IYH = старший байт адреса
+ 23+  81F3                              ; Output:
+ 24+  81F3                              ;   DE => screen addr
+ 25+  81F3
+ 26+  81F3              CalcScreenAddr: ; Преобразуем координату Y в пикселях в значение в знакоместах
+ 27+  81F3 78                           ld		a, b
+ 28+  81F4 17                           rla
+ 29+  81F5 17                           rla
+ 30+  81F6 17                           rla
+ 31+  81F7 E6 F8                        and		0xf8
+ 32+  81F9              ; альтернативная точка входа, A = Y (пиксели)
+ 33+  81F9              CalcScreenAddrPix:
+ 34+  81F9 47                           ld		b, a
+ 35+  81FA                              ; Расчитываем адрес на экране
+ 36+  81FA 17                           rla                                 ; A = ? |Y5|Y4|Y3| ?| ?| ?| ?
+ 37+  81FB 17                           rla                                 ; A = Y5|Y4|Y3| ?| ?| ?| ?| ?
+ 38+  81FC E6 E0                        and     0xe0            ; 1110 0000 ; A = Y5|Y4|Y3| 0| 0| 0| 0| 0
+ 39+  81FE B1                           or      c               ;             A = Y5|Y4|Y3|X4|X3|X2|X1|X0
+ 40+  81FF 5F                           ld      e, a
+ 41+  8200 78                           ld      a, b
+ 42+  8201 1F                           rra
+ 43+  8202 1F                           rra
+ 44+  8203 1F                           rra                                 ; A =  ?| ?| ?|Y7|Y6| ?| ?| ?
+ 45+  8204 E6 18                        and     0x18                        ; A =  0| 0| 0|Y7|Y6| 0| 0| 0
+ 46+  8206 57                           ld      d, a
+ 47+  8207 78                           ld      a, b
+ 48+  8208 E6 07                        and     0x07                        ; A =  0| 0| 0| 0| 0|Y2|Y1|Y0
+ 49+  820A B2                           or      d                           ; A =  0| 0| 0|Y7|Y6|Y2|Y1|Y0
+ 50+  820B FD B4                        or      iyh                         ; A =  0| 1| 0|Y7|Y6|Y2|Y1|Y0
+ 51+  820D 57                           ld      d, a
+ 52+  820E C9                           ret
+ 53+  820F
+ 54+  820F                              ; Input:
+ 55+  820F                              ;   C = X (знакоместо)
+ 56+  820F                              ;   B = Y (знакоместо)
+ 57+  820F                              ;   D = дополнительный сдвиг по Y (-7..7)
+ 58+  820F
+ 59+  820F              DrawEmptyByte:	; Расчитываем адрес назначения
+ 60+  820F FD 26 40                     ld		iyh, 0x40
+ 61+  8212 78                           ld		a, b
+ 62+  8213 87                           add		a, a		; *2
+ 63+  8214 87                           add		a, a		; *4
+ 64+  8215 87                           add		a, a		; *8
+ 65+  8216 82                           add		a, d
+ 66+  8217 CD F9 81         			call    CalcScreenAddrPix
+ 67+  821A                  			; Записываем нулевой байт
+ 68+  821A AF               			xor		a
+ 69+  821B 12               			ld		(de), a
+ 70+  821C C9               			ret
+ 71+  821D
+ 72+  821D                              ; Input:
+ 73+  821D                              ;	A = атрибут
+ 74+  821D                              ;   E = дополнительный сдвиг по X (-7..7)
+ 75+  821D                              ;   D = дополнительный сдвиг по Y (-7..7)
+ 76+  821D                              ;   L = X спрайта (знакоместо)
+ 77+  821D                              ;   H = Y спрайта (знакоместо)
+ 78+  821D                              ;   C = X (знакоместо)
+ 79+  821D                              ;   B = Y (знакоместо)
+ 80+  821D
+ 81+  821D              DrawChar:    	; Сохраняем А
+ 82+  821D 08                           ex      af, af'
+ 83+  821E                              ; Патчим код
+ 84+  821E 7B                           ld		a, e
+ 85+  821F 32 3D 82                     ld		(.hotPatch+2), a
+ 86+  8222              				; Расчитываем адрес назначения
+ 87+  8222 FD 26 40                     ld		iyh, 0x40
+ 88+  8225 78                           ld		a, b
+ 89+  8226 87                           add		a, a		; *2
+ 90+  8227 87                           add		a, a		; *4
+ 91+  8228 87                           add		a, a		; *8
+ 92+  8229 82                           add		a, d
+ 93+  822A CD F9 81         			call    CalcScreenAddrPix
+ 94+  822D D5                           push	de
+ 95+  822E                              ; Преобразуем координату Y спрайта в адрес в SCR
+ 96+  822E 44                           ld		b, h
+ 97+  822F 4D                           ld		c, l
+ 98+  8230 EB                           ex		de, hl		; сохраню DE в HL
+ 99+  8231                              ; Расчитываем адрес спрайта
+100+  8231 FD 26 A0                     ld		iyh, high gfx
+101+  8234 CD F3 81                     call	CalcScreenAddr
+102+  8237
+103+  8237 FD 21 4E 82  				ld		iy, .table
+104+  823B FD 4E 00     .hotPatch:		ld		c, (iy+0)
+105+  823E 06 00        				ld		b, 0
+106+  8240 FD 09        				add		iy, bc
+107+  8242 06 08                        ld      b, 8		; счетчик для цикла
+108+  8244 FD E9        				jp		(iy)
+109+  8246
+110+  8246 09           				db		.empty-.table
+111+  8247 13           				db		.shiftM7-.table
+112+  8248 21           				db		.shiftM6-.table
+113+  8249 30           				db		.shiftM5-.table
+114+  824A 40           				db		.shiftM4-.table
+115+  824B 51           				db		.shiftM3-.table
+116+  824C 61           				db		.shiftM2-.table
+117+  824D 6F           				db		.shiftM1-.table
+118+  824E 7B           .table:			db		.noShift-.table
+119+  824F 85           				db		.shift1-.table
+120+  8250 91           				db		.shift2-.table
+121+  8251 9F           				db		.shift3-.table
+122+  8252 AE           				db		.shift4-.table
+123+  8253 BE           				db		.shift5-.table
+124+  8254 CD           				db		.shift6-.table
+125+  8255 DB           				db		.shift7-.table
+126+  8256 09           				db		.empty-.table
+127+  8257
+128+  8257 AF           .empty:       	xor		a
+129+  8258 77           				ld      (hl), a
+130+  8259 CD 4C 83                     call	DownHL
+131+  825C 10 F9                        djnz    .empty
+132+  825E C3 34 83                     jp		.charDone
+133+  8261
+134+  8261 1A           .shiftM7:       ld      a, (de)
+135+  8262 0F           				rrca
+136+  8263 E6 80        				and		0x80
+137+  8265 77                           ld      (hl), a
+138+  8266 14                           inc     d
+139+  8267 CD 4C 83                     call	DownHL
+140+  826A 10 F5                        djnz    .shiftM7
+141+  826C C3 34 83                     jp		.charDone
+142+  826F
+143+  826F 1A           .shiftM6:       ld      a, (de)
+144+  8270 0F           				rrca
+145+  8271 0F           				rrca
+146+  8272 E6 C0        				and		0xc0
+147+  8274 77                           ld      (hl), a
+148+  8275 14                           inc     d
+149+  8276 CD 4C 83                     call	DownHL
+150+  8279 10 F4                        djnz    .shiftM6
+151+  827B C3 34 83                     jp		.charDone
+152+  827E
+153+  827E 1A           .shiftM5:       ld      a, (de)
+154+  827F              				dup		3
+155+  827F 0F          >				rrca
+155+  8280 0F          >				rrca
+155+  8281 0F          >				rrca
+156+  8282              				edup
+157+  8282 E6 E0        				and		0xe0
+158+  8284 77                           ld      (hl), a
+159+  8285 14                           inc     d
+160+  8286 CD 4C 83                     call	DownHL
+161+  8289 10 F3                        djnz    .shiftM5
+162+  828B C3 34 83                     jp		.charDone
+163+  828E
+164+  828E 1A           .shiftM4:       ld      a, (de)
+165+  828F              				dup		4
+166+  828F 07          >				rlca
+166+  8290 07          >				rlca
+166+  8291 07          >				rlca
+166+  8292 07          >				rlca
+167+  8293              				edup
+168+  8293 E6 F0        				and		0xf0
+169+  8295 77                           ld      (hl), a
+170+  8296 14                           inc     d
+171+  8297 CD 4C 83                     call	DownHL
+172+  829A 10 F2                        djnz    .shiftM4
+173+  829C C3 34 83                     jp		.charDone
+174+  829F
+175+  829F 1A           .shiftM3:       ld      a, (de)
+176+  82A0              				dup		3
+177+  82A0 07          >				rlca
+177+  82A1 07          >				rlca
+177+  82A2 07          >				rlca
+178+  82A3              				edup
+179+  82A3 E6 F8        				and		0xf8
+180+  82A5 77                           ld      (hl), a
+181+  82A6 14                           inc     d
+182+  82A7 CD 4C 83                     call	DownHL
+183+  82AA 10 F3                        djnz    .shiftM3
+184+  82AC C3 34 83                     jp		.charDone
+185+  82AF
+186+  82AF 1A           .shiftM2:       ld      a, (de)
+187+  82B0 07           				rlca
+188+  82B1 07           				rlca
+189+  82B2 E6 FC        				and		0xfc
+190+  82B4 77                           ld      (hl), a
+191+  82B5 14                           inc     d
+192+  82B6 CD 4C 83                     call	DownHL
+193+  82B9 10 F4                        djnz    .shiftM2
+194+  82BB 18 77                        jr		.charDone
+195+  82BD
+196+  82BD 1A           .shiftM1:       ld      a, (de)
+197+  82BE CB 27        				sla		a
+198+  82C0 77                           ld      (hl), a
+199+  82C1 14                           inc     d
+200+  82C2 CD 4C 83                     call	DownHL
+201+  82C5 10 F6                        djnz    .shiftM1
+202+  82C7 18 6B                        jr		.charDone
+203+  82C9
+204+  82C9 1A           .noShift:       ld      a, (de)
+205+  82CA 77                           ld      (hl), a
+206+  82CB 14                           inc     d
+207+  82CC CD 4C 83                     call	DownHL
+208+  82CF 10 F8                        djnz    .noShift
+209+  82D1 18 61                        jr		.charDone
+210+  82D3
+211+  82D3 1A           .shift1:       	ld      a, (de)
+212+  82D4 CB 3F        				srl		a
+213+  82D6 77                           ld      (hl), a
+214+  82D7 14                           inc     d
+215+  82D8 CD 4C 83                     call	DownHL
+216+  82DB 10 F6                        djnz    .shift1
+217+  82DD 18 55                        jr		.charDone
+218+  82DF
+219+  82DF 1A           .shift2:       	ld      a, (de)
+220+  82E0 0F           				rrca
+221+  82E1 0F           				rrca
+222+  82E2 E6 3F        				and		0x3f
+223+  82E4 77                           ld      (hl), a
+224+  82E5 14                           inc     d
+225+  82E6 CD 4C 83                     call	DownHL
+226+  82E9 10 F4                        djnz    .shift2
+227+  82EB 18 47                        jr		.charDone
+228+  82ED
+229+  82ED 1A           .shift3:       	ld      a, (de)
+230+  82EE              				dup		3
+231+  82EE 0F          >				rrca
+231+  82EF 0F          >				rrca
+231+  82F0 0F          >				rrca
+232+  82F1              				edup
+233+  82F1 E6 1F        				and		0x1f
+234+  82F3 77                           ld      (hl), a
+235+  82F4 14                           inc     d
+236+  82F5 CD 4C 83                     call	DownHL
+237+  82F8 10 F3                        djnz    .shift3
+238+  82FA 18 38                        jr		.charDone
+239+  82FC
+240+  82FC 1A           .shift4:       	ld      a, (de)
+241+  82FD              				dup		4
+242+  82FD 0F          >				rrca
+242+  82FE 0F          >				rrca
+242+  82FF 0F          >				rrca
+242+  8300 0F          >				rrca
+243+  8301              				edup
+244+  8301 E6 0F        				and		0x0f
+245+  8303 77                           ld      (hl), a
+246+  8304 14                           inc     d
+247+  8305 CD 4C 83                     call	DownHL
+248+  8308 10 F2                        djnz    .shift4
+249+  830A 18 28                        jr		.charDone
+250+  830C
+251+  830C 1A           .shift5:       	ld      a, (de)
+252+  830D              				dup		3
+253+  830D 07          >				rlca
+253+  830E 07          >				rlca
+253+  830F 07          >				rlca
+254+  8310              				edup
+255+  8310 E6 07        				and		0x07
+256+  8312 77                           ld      (hl), a
+257+  8313 14                           inc     d
+258+  8314 CD 4C 83                     call	DownHL
+259+  8317 10 F3                        djnz    .shift5
+260+  8319 18 19                        jr		.charDone
+261+  831B
+262+  831B 1A           .shift6:       	ld      a, (de)
+263+  831C              				dup		2
+264+  831C 07          >				rlca
+264+  831D 07          >				rlca
+265+  831E              				edup
+266+  831E E6 03        				and		0x03
+267+  8320 77                           ld      (hl), a
+268+  8321 14                           inc     d
+269+  8322 CD 4C 83                     call	DownHL
+270+  8325 10 F4                        djnz    .shift6
+271+  8327 18 0B                        jr		.charDone
+272+  8329
+273+  8329 1A           .shift7:       	ld      a, (de)
+274+  832A 07           				rlca
+275+  832B E6 01        				and		0x01
+276+  832D 77                           ld      (hl), a
+277+  832E 14                           inc     d
+278+  832F CD 4C 83                     call	DownHL
+279+  8332 10 F5                        djnz    .shift7
+280+  8334                              ;jr		.charDone
+281+  8334
+282+  8334              .charDone: 		; Получаем из стека начальный адрес на экране
+283+  8334 E1           				pop		hl
+284+  8335 4C           				ld		c, h				; сохраняем старший байт в C для проверки внизу
+285+  8336              				; Расчитываем адрес в области атрибутов
+286+  8336 7C                           ld      a, h
+287+  8337 1F                  			rra
+288+  8338 1F                           rra
+289+  8339 1F                           rra
+290+  833A E6 03                        and     0x03
+291+  833C F6 58                        or      0x58
+292+  833E 67                           ld      h, a
+293+  833F                              ; Восстанавливаем A
+294+  833F 08                           ex      af, af'
+295+  8340                              ; Записываем атрибут
+296+  8340 77                           ld      (hl), a
+297+  8341                              ; Сохраняем атрибут в B
+298+  8341 47                           ld		b, a
+299+  8342                              ; Проверяем, нужно ли рисовать второй атрибут
+300+  8342 3E 07                        ld		a, 7
+301+  8344 A1                           and		c
+302+  8345 C8                           ret		z				; мы на границе знакоместа, второй атрибут не нужен
+303+  8346              				; Переходим на следующую строку в атрибутах
+304+  8346 11 20 00                     ld		de, 32
+305+  8349 19                           add		hl, de
+306+  834A              				; Записываем второй атрибут
+307+  834A 70                           ld		(hl), b
+308+  834B C9                           ret
+309+  834C
+310+  834C                              ; Input:
+311+  834C                              ;	HL => адрес байта (8 пикселей) на экране
+312+  834C                              ; Output:
+313+  834C                              ;   HL => адрес байта (8 пикселей) в следующей строке (Y = Y + 1)
+314+  834C
+315+  834C 24           DownHL:			inc		h
+316+  834D 3E 07        				ld		a, 00000111b	; 7=8-1;  остаток от деления на 8
+317+  834F A4           				and		h
+318+  8350 C0           				ret		nz
+319+  8351 7D           				ld		a, l			; L = L + 32
+320+  8352 D6 E0        				sub		-32
+321+  8354 6F           				ld		l, a
+322+  8355 9F           				sbc		a, a			; 0 = no carry, -1 (0xff 11111111) = was carry
+323+  8356 E6 F8        				and		-8				; 0 = no carry, -8 (0xf8 11111000) = was carry
+324+  8358 84           				add		a, h
+325+  8359 67           				ld		h, a
+326+  835A C9           				ret
+327+  835B
 # file closed: draw.asm
- 40   8355              					include		"input.asm"
+ 43   835B              					include		"input.asm"
 # file opened: input.asm
-  1+  8355
-  2+  8355 01 FE FB     ReadInput:			ld			bc, 0xfbfe
-  3+  8358 ED 78        					in			a, (c)
-  4+  835A E6 01        					and			1					; Q
-  5+  835C 32 87 83     					ld			(Input.up), a
-  6+  835F
-  7+  835F 01 FE FD     					ld			bc, 0xfdfe
-  8+  8362 ED 78        					in			a, (c)
-  9+  8364 E6 01        					and			1					; A
- 10+  8366 32 88 83     					ld			(Input.down), a
- 11+  8369
- 12+  8369 01 FE DF     					ld			bc, 0xdffe
- 13+  836C ED 78        					in			a, (c)
- 14+  836E 47           					ld			b, a
- 15+  836F E6 02        					and			2					; O
- 16+  8371 32 85 83     					ld			(Input.left), a
- 17+  8374
- 18+  8374 78           					ld			a, b
- 19+  8375 E6 01        					and			1					; P
- 20+  8377 32 86 83     					ld			(Input.right), a
- 21+  837A
- 22+  837A 01 FE 7F     					ld			bc, 0x7ffe
- 23+  837D ED 78        					in			a, (c)
- 24+  837F E6 01        					and			1					; Space
- 25+  8381 32 89 83     					ld			(Input.fire), a
- 26+  8384
- 27+  8384 C9           					ret
- 28+  8385
- 29+  8385              Input:
- 30+  8385 01           .left:				db			1
- 31+  8386 01           .right:				db			1
- 32+  8387 01           .up:				db			1
- 33+  8388 01           .down:				db			1
- 34+  8389 01           .fire:				db			1
- 35+  838A
+  1+  835B
+  2+  835B 01 FE FB     ReadInput:			ld			bc, 0xfbfe
+  3+  835E ED 78        					in			a, (c)
+  4+  8360 E6 01        					and			1					; Q
+  5+  8362 32 8D 83     					ld			(Input.up), a
+  6+  8365
+  7+  8365 01 FE FD     					ld			bc, 0xfdfe
+  8+  8368 ED 78        					in			a, (c)
+  9+  836A E6 01        					and			1					; A
+ 10+  836C 32 8E 83     					ld			(Input.down), a
+ 11+  836F
+ 12+  836F 01 FE DF     					ld			bc, 0xdffe
+ 13+  8372 ED 78        					in			a, (c)
+ 14+  8374 47           					ld			b, a
+ 15+  8375 E6 02        					and			2					; O
+ 16+  8377 32 8B 83     					ld			(Input.left), a
+ 17+  837A
+ 18+  837A 78           					ld			a, b
+ 19+  837B E6 01        					and			1					; P
+ 20+  837D 32 8C 83     					ld			(Input.right), a
+ 21+  8380
+ 22+  8380 01 FE 7F     					ld			bc, 0x7ffe
+ 23+  8383 ED 78        					in			a, (c)
+ 24+  8385 E6 01        					and			1					; Space
+ 25+  8387 32 8F 83     					ld			(Input.fire), a
+ 26+  838A
+ 27+  838A C9           					ret
+ 28+  838B
+ 29+  838B              Input:
+ 30+  838B 01           .left:				db			1
+ 31+  838C 01           .right:				db			1
+ 32+  838D 01           .up:				db			1
+ 33+  838E 01           .down:				db			1
+ 34+  838F 01           .fire:				db			1
+ 35+  8390
 # file closed: input.asm
- 41   838A              					include		"player.asm"
+ 44   8390              					include		"level.asm"
+# file opened: level.asm
+  1+  8390
+  2+  8390              LEVEL_WIDTH 		equ		 	32
+  3+  8390              LEVEL_HEIGHT 		equ 		20
+  4+  8390
+  5+  8390              FLOOR_ATTR 			equ 		01001111b
+  6+  8390              WALL_ATTR  			equ 		00001101b
+  7+  8390
+  8+  8390              					; пробел - пустое место
+  9+  8390              					; X - стена
+ 10+  8390              					; 1 - точка старта
+ 11+  8390
+ 12+  8390 58 58 58 58  Level:				db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+ 12+  8394 58 58 58 58
+ 12+  8398 58 58 58 58
+ 12+  839C 58 58 58 58
+ 12+  83A0 58 58 58 58
+ 12+  83A4 58 58 58 58
+ 12+  83A8 58 58 58 58
+ 12+  83AC 58 58 58 58
+ 13+  83B0 58 20 20 20  					db			"X                              X"
+ 13+  83B4 20 20 20 20
+ 13+  83B8 20 20 20 20
+ 13+  83BC 20 20 20 20
+ 13+  83C0 20 20 20 20
+ 13+  83C4 20 20 20 20
+ 13+  83C8 20 20 20 20
+ 13+  83CC 20 20 20 58
+ 14+  83D0 58 20 20 20  					db			"X                              X"
+ 14+  83D4 20 20 20 20
+ 14+  83D8 20 20 20 20
+ 14+  83DC 20 20 20 20
+ 14+  83E0 20 20 20 20
+ 14+  83E4 20 20 20 20
+ 14+  83E8 20 20 20 20
+ 14+  83EC 20 20 20 58
+ 15+  83F0 58 20 20 20  					db			"X                              X"
+ 15+  83F4 20 20 20 20
+ 15+  83F8 20 20 20 20
+ 15+  83FC 20 20 20 20
+ 15+  8400 20 20 20 20
+ 15+  8404 20 20 20 20
+ 15+  8408 20 20 20 20
+ 15+  840C 20 20 20 58
+ 16+  8410 58 20 20 20  					db			"X                              X"
+ 16+  8414 20 20 20 20
+ 16+  8418 20 20 20 20
+ 16+  841C 20 20 20 20
+ 16+  8420 20 20 20 20
+ 16+  8424 20 20 20 20
+ 16+  8428 20 20 20 20
+ 16+  842C 20 20 20 58
+ 17+  8430 58 20 20 20  					db			"X                              X"
+ 17+  8434 20 20 20 20
+ 17+  8438 20 20 20 20
+ 17+  843C 20 20 20 20
+ 17+  8440 20 20 20 20
+ 17+  8444 20 20 20 20
+ 17+  8448 20 20 20 20
+ 17+  844C 20 20 20 58
+ 18+  8450 58 20 20 20  					db			"X        1                     X"
+ 18+  8454 20 20 20 20
+ 18+  8458 20 31 20 20
+ 18+  845C 20 20 20 20
+ 18+  8460 20 20 20 20
+ 18+  8464 20 20 20 20
+ 18+  8468 20 20 20 20
+ 18+  846C 20 20 20 58
+ 19+  8470 58 20 20 20  					db			"X                              X"
+ 19+  8474 20 20 20 20
+ 19+  8478 20 20 20 20
+ 19+  847C 20 20 20 20
+ 19+  8480 20 20 20 20
+ 19+  8484 20 20 20 20
+ 19+  8488 20 20 20 20
+ 19+  848C 20 20 20 58
+ 20+  8490 58 20 20 20  					db			"X                              X"
+ 20+  8494 20 20 20 20
+ 20+  8498 20 20 20 20
+ 20+  849C 20 20 20 20
+ 20+  84A0 20 20 20 20
+ 20+  84A4 20 20 20 20
+ 20+  84A8 20 20 20 20
+ 20+  84AC 20 20 20 58
+ 21+  84B0 58 20 20 20  					db			"X                              X"
+ 21+  84B4 20 20 20 20
+ 21+  84B8 20 20 20 20
+ 21+  84BC 20 20 20 20
+ 21+  84C0 20 20 20 20
+ 21+  84C4 20 20 20 20
+ 21+  84C8 20 20 20 20
+ 21+  84CC 20 20 20 58
+ 22+  84D0 58 20 20 20  					db			"X                              X"
+ 22+  84D4 20 20 20 20
+ 22+  84D8 20 20 20 20
+ 22+  84DC 20 20 20 20
+ 22+  84E0 20 20 20 20
+ 22+  84E4 20 20 20 20
+ 22+  84E8 20 20 20 20
+ 22+  84EC 20 20 20 58
+ 23+  84F0 58 20 20 20  					db			"X                              X"
+ 23+  84F4 20 20 20 20
+ 23+  84F8 20 20 20 20
+ 23+  84FC 20 20 20 20
+ 23+  8500 20 20 20 20
+ 23+  8504 20 20 20 20
+ 23+  8508 20 20 20 20
+ 23+  850C 20 20 20 58
+ 24+  8510 58 20 20 20  					db			"X                              X"
+ 24+  8514 20 20 20 20
+ 24+  8518 20 20 20 20
+ 24+  851C 20 20 20 20
+ 24+  8520 20 20 20 20
+ 24+  8524 20 20 20 20
+ 24+  8528 20 20 20 20
+ 24+  852C 20 20 20 58
+ 25+  8530 58 20 58 58  					db			"X XXX XXX X X XXX XXX  X  XX X X"
+ 25+  8534 58 20 58 58
+ 25+  8538 58 20 58 20
+ 25+  853C 58 20 58 58
+ 25+  8540 58 20 58 58
+ 25+  8544 58 20 20 58
+ 25+  8548 20 20 58 58
+ 25+  854C 20 58 20 58
+ 26+  8550 58 20 58 20  					db			"X X   X X X X X X X X X X XX X X"
+ 26+  8554 20 20 58 20
+ 26+  8558 58 20 58 20
+ 26+  855C 58 20 58 20
+ 26+  8560 58 20 58 20
+ 26+  8564 58 20 58 20
+ 26+  8568 58 20 58 58
+ 26+  856C 20 58 20 58
+ 27+  8570 58 20 58 58  					db			"X XXX X X XX  X X XX  XXX X XX X"
+ 27+  8574 58 20 58 20
+ 27+  8578 58 20 58 58
+ 27+  857C 20 20 58 20
+ 27+  8580 58 20 58 58
+ 27+  8584 20 20 58 58
+ 27+  8588 58 20 58 20
+ 27+  858C 58 58 20 58
+ 28+  8590 58 20 20 20  					db			"X   X X X X X X X X X X X X XX X"
+ 28+  8594 58 20 58 20
+ 28+  8598 58 20 58 20
+ 28+  859C 58 20 58 20
+ 28+  85A0 58 20 58 20
+ 28+  85A4 58 20 58 20
+ 28+  85A8 58 20 58 20
+ 28+  85AC 58 58 20 58
+ 29+  85B0 58 20 58 58  					db			"X XXX XXX X X XXX XXX X X X  X X"
+ 29+  85B4 58 20 58 58
+ 29+  85B8 58 20 58 20
+ 29+  85BC 58 20 58 58
+ 29+  85C0 58 20 58 58
+ 29+  85C4 58 20 58 20
+ 29+  85C8 58 20 58 20
+ 29+  85CC 20 58 20 58
+ 30+  85D0 58 20 20 20  					db			"X                              X"
+ 30+  85D4 20 20 20 20
+ 30+  85D8 20 20 20 20
+ 30+  85DC 20 20 20 20
+ 30+  85E0 20 20 20 20
+ 30+  85E4 20 20 20 20
+ 30+  85E8 20 20 20 20
+ 30+  85EC 20 20 20 58
+ 31+  85F0 58 58 58 58  					db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+ 31+  85F4 58 58 58 58
+ 31+  85F8 58 58 58 58
+ 31+  85FC 58 58 58 58
+ 31+  8600 58 58 58 58
+ 31+  8604 58 58 58 58
+ 31+  8608 58 58 58 58
+ 31+  860C 58 58 58 58
+ 32+  8610              LevelEnd:
+ 33+  8610
+ 34+  8610 21 10 86     InitLevel:			ld			hl, LevelEnd
+ 35+  8613 0E 14        					ld			c, LEVEL_HEIGHT
+ 36+  8615 06 20        .rowLoop:			ld			b, LEVEL_WIDTH
+ 37+  8617 2B           .colLoop:			dec			hl
+ 38+  8618 7E           					ld			a, (hl)
+ 39+  8619 FE 31        					cp			a, '1'
+ 40+  861B CC 24 86     					call		z, .handlePlayerStart
+ 41+  861E 10 F7        					djnz		.colLoop
+ 42+  8620 0D           					dec			c
+ 43+  8621 20 F2        					jr			nz, .rowLoop
+ 44+  8623 C9           					ret
+ 45+  8624 36 20        .handlePlayerStart:	ld			(hl), ' '
+ 46+  8626 78           					ld			a, b
+ 47+  8627 3D           					dec			a
+ 48+  8628 32 7A 86     					ld			(player1.x), a
+ 49+  862B 79           					ld			a, c
+ 50+  862C 3D           					dec			a
+ 51+  862D 32 7B 86     					ld			(player1.y), a
+ 52+  8630 C9           					ret
+ 53+  8631
+ 54+  8631 21 10 86     DrawLevel:			ld			hl, LevelEnd
+ 55+  8634 06 14        					ld			b, LEVEL_HEIGHT
+ 56+  8636 0E 20        .rowLoop:			ld			c, LEVEL_WIDTH
+ 57+  8638 2B           .colLoop:			dec			hl
+ 58+  8639 7E           					ld			a, (hl)
+ 59+  863A FE 20        					cp			a, ' '
+ 60+  863C CC 4A 86     					call		z, .drawFloor
+ 61+  863F FE 58        					cp			a, 'X'
+ 62+  8641 CC 51 86     					call		z, .drawWall
+ 63+  8644 0D           					dec			c
+ 64+  8645 20 F1        					jr			nz, .colLoop
+ 65+  8647 10 ED        					djnz		.rowLoop
+ 66+  8649 C9           					ret
+ 67+  864A 3E 4F        .drawFloor:			ld			a, FLOOR_ATTR
+ 68+  864C 11 01 02     					ld			de, 0x201
+ 69+  864F 18 05        					jr			.drawChar
+ 70+  8651 3E 0D        .drawWall:			ld			a, WALL_ATTR
+ 71+  8653 11 00 02     					ld			de, 0x200
+ 72+  8656              					;jr			.drawChar
+ 73+  8656 C5           .drawChar:			push		bc
+ 74+  8657 E5           					push		hl
+ 75+  8658 05           					dec			b
+ 76+  8659 0D           					dec			c
+ 77+  865A 21 00 00     					ld			hl, 0
+ 78+  865D EB           					ex			de, hl
+ 79+  865E CD 1D 82     					call		DrawChar
+ 80+  8661 E1           					pop			hl
+ 81+  8662 C1           					pop			bc
+ 82+  8663 C9           					ret
+ 83+  8664
+ 84+  8664              					; Input:
+ 85+  8664              	                ;   C = X (знакоместо)
+ 86+  8664                  	            ;   B = Y (знакоместо)
+ 87+  8664                  	            ; Output:
+ 88+  8664                  	            ;   ZF=0 если ходить нельзя, ZF=1 если ходить можно
+ 89+  8664
+ 90+  8664 CD 6B 86     CheckBlocked:		call		GetLevelAddr
+ 91+  8667 7E           					ld			a, (hl)
+ 92+  8668 FE 20        					cp			a, ' '
+ 93+  866A C9           					ret
+ 94+  866B
+ 95+  866B              					; Input:
+ 96+  866B              	                ;   C = X (знакоместо)
+ 97+  866B                  	            ;   B = Y (знакоместо)
+ 98+  866B                  	            ; Output:
+ 99+  866B                  	            ;	HL => адрес внутри Level
+100+  866B
+101+  866B              GetLevelAddr:		; HL = B * 32 + C; 32 = LEVEL_WIDTH
+102+  866B 68           					ld			l, b
+103+  866C 26 00        					ld			h, 0
+104+  866E 44           					ld			b, h
+105+  866F 29           					add			hl, hl			; *2
+106+  8670 29           					add			hl, hl			; *4
+107+  8671 29           					add			hl, hl			; *8
+108+  8672 29           					add			hl, hl			; *16
+109+  8673 29           					add			hl, hl			; *32
+110+  8674 09           					add			hl, bc
+111+  8675 01 90 83     					ld			bc, Level
+112+  8678 09           					add			hl, bc
+113+  8679 C9           					ret
+114+  867A
+# file closed: level.asm
+ 45   867A              					include		"player.asm"
 # file opened: player.asm
-  1+  838A
-  2+  838A              PLAYER_IDLE			equ			0
-  3+  838A              PLAYER_GO_LEFT		equ			2
-  4+  838A              PLAYER_GO_RIGHT		equ			4
-  5+  838A              PLAYER_GO_UP		equ			6
-  6+  838A              PLAYER_GO_DOWN		equ			8
-  7+  838A
-  8+  838A              PLAYER_MAX_X		equ 		31
-  9+  838A              PLAYER_MAX_Y		equ			23
- 10+  838A
- 11+  838A              PLAYER_MOVE_DELAY_BITS equ		1
- 12+  838A
- 13+  838A              PLAYER_ATTR			equ			0x4f
- 14+  838A
- 15+  838A              					struct 		SPLAYER
- 16+  838A ~            x 					byte
- 17+  838A ~            y 					byte
- 18+  838A ~            state				byte
- 19+  838A ~            time				byte
- 20+  838A              					ends
- 21+  838A
- 22+  838A 05 02 00 00  player1:			SPLAYER		5,2,PLAYER_IDLE,0
- 23+  838E
- 24+  838E DD 36 02 00  InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
- 25+  8392 C9           					ret
- 26+  8393
- 27+  8393 DD 4E 00     DrawPlayer:			ld			c, (ix+SPLAYER.x)
- 28+  8396 DD 46 01     					ld			b, (ix+SPLAYER.y)
- 29+  8399
- 30+  8399 DD 6E 02     					ld			l, (ix+SPLAYER.state)
- 31+  839C 26 00        					ld			h, 0
- 32+  839E 11 A3 83     					ld			de, .jumpTable
- 33+  83A1 19           					add			hl, de
- 34+  83A2 E9           					jp			(hl)
- 35+  83A3 18 08        .jumpTable:			jr			.drawIdle
- 36+  83A5 18 10        					jr			.drawLeft
- 37+  83A7 18 35        					jr			.drawRight
- 38+  83A9 18 6F        					jr			.drawUp
- 39+  83AB 18 57        					jr			.drawDown
- 40+  83AD
- 41+  83AD 21 00 00     .drawIdle:			ld			hl, 0x0000
- 42+  83B0 54           					ld			d, h
- 43+  83B1 5C           					ld			e, h
- 44+  83B2 3E 4F        					ld			a, PLAYER_ATTR
- 45+  83B4 C3 17 82     					jp			DrawChar
- 46+  83B7
- 47+  83B7 DD 7E 03     .drawLeft:			ld			a, (ix+SPLAYER.time)
- 48+  83BA              					dup			PLAYER_MOVE_DELAY_BITS
- 49+  83BA 0F          >					rrca
- 50+  83BB              					edup
- 51+  83BB E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
- 52+  83BD 3C           					inc			a
- 53+  83BE ED 44        					neg
- 54+  83C0 5F           					ld			e, a
- 55+  83C1 0F           					rrca
- 56+  83C2 E6 01        					and			1
- 57+  83C4 3C           					inc			a
- 58+  83C5 6F           					ld			l, a
- 59+  83C6 26 00        					ld			h, 0
- 60+  83C8 54           					ld			d, h
- 61+  83C9
- 62+  83C9 E5           					push		hl
- 63+  83CA D5           					push		de
- 64+  83CB C5           					push		bc
- 65+  83CC 3E 4F        					ld			a, PLAYER_ATTR
- 66+  83CE 0C           					inc			c
- 67+  83CF CD 17 82     					call		DrawChar
- 68+  83D2 C1           					pop			bc
- 69+  83D3 D1           					pop			de
- 70+  83D4 E1           					pop			hl
- 71+  83D5
- 72+  83D5 3E 08        					ld			a, 8
- 73+  83D7 83           					add			a, e
- 74+  83D8 5F           					ld			e, a
- 75+  83D9 3E 4F        					ld			a, PLAYER_ATTR
- 76+  83DB C3 17 82     					jp			DrawChar
- 77+  83DE
- 78+  83DE DD 7E 03     .drawRight:			ld			a, (ix+SPLAYER.time)
- 79+  83E1              					dup			PLAYER_MOVE_DELAY_BITS
- 80+  83E1 0F          >					rrca
- 81+  83E2              					edup
- 82+  83E2 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
- 83+  83E4 3C           					inc			a
- 84+  83E5 5F           					ld			e, a
- 85+  83E6 0F           					rrca
- 86+  83E7 E6 01        					and			1
- 87+  83E9 C6 03        					add			a, 3
- 88+  83EB 6F           					ld			l, a
- 89+  83EC 26 00        					ld			h, 0
- 90+  83EE 54           					ld			d, h
- 91+  83EF
- 92+  83EF E5           					push		hl
- 93+  83F0 D5           					push		de
- 94+  83F1 C5           					push		bc
- 95+  83F2 3E 4F        					ld			a, PLAYER_ATTR
- 96+  83F4 0D           					dec			c
- 97+  83F5 CD 17 82     					call		DrawChar
- 98+  83F8 C1           					pop			bc
- 99+  83F9 D1           					pop			de
-100+  83FA E1           					pop			hl
-101+  83FB
-102+  83FB 7B           					ld			a, e
-103+  83FC D6 08        					sub			8
-104+  83FE 5F           					ld			e, a
-105+  83FF 3E 4F        					ld			a, PLAYER_ATTR
-106+  8401 C3 17 82     					jp			DrawChar
-107+  8404
-108+  8404 DD 7E 03     .drawDown:			ld			a, (ix+SPLAYER.time)
-109+  8407              					dup			PLAYER_MOVE_DELAY_BITS
-110+  8407 0F          >					rrca
-111+  8408              					edup
-112+  8408 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-113+  840A 3C           					inc			a
-114+  840B 57           					ld			d, a
-115+  840C E6 03        					and			3
-116+  840E C6 05        					add			a, 5
-117+  8410 6F           					ld			l, a
-118+  8411 26 00        					ld			h, 0
-119+  8413 5C           					ld			e, h
-120+  8414
-121+  8414 3E 4F        					ld			a, PLAYER_ATTR
-122+  8416 05           					dec			b
-123+  8417 C3 17 82     					jp			DrawChar
-124+  841A
-125+  841A DD 7E 03     .drawUp:			ld			a, (ix+SPLAYER.time)
-126+  841D              					dup			PLAYER_MOVE_DELAY_BITS
-127+  841D 0F          >					rrca
-128+  841E              					edup
-129+  841E E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-130+  8420 3C           					inc			a
-131+  8421 ED 44        					neg
-132+  8423 57           					ld			d, a
-133+  8424 E6 03        					and			3
-134+  8426 C6 05        					add			a, 5
-135+  8428 6F           					ld			l, a
-136+  8429 26 00        					ld			h, 0
-137+  842B 5C           					ld			e, h
-138+  842C
-139+  842C 3E 4F        					ld			a, PLAYER_ATTR
-140+  842E 04           					inc			b
-141+  842F D5           					push		de
-142+  8430 C5           					push		bc
-143+  8431 CD 17 82     					call		DrawChar
-144+  8434 C1           					pop			bc
-145+  8435 D1           					pop			de
-146+  8436
-147+  8436 3E 08        					ld			a, 8
-148+  8438 82           					add			a, d
-149+  8439 57           					ld			d, a
-150+  843A C3 09 82     					jp			DrawEmptyByte
-151+  843D
-152+  843D DD 6E 02     HandlePlayer:		ld			l, (ix+SPLAYER.state)
-153+  8440 26 00        					ld			h, 0
-154+  8442 01 47 84     					ld			bc, .jumpTable
-155+  8445 09           					add			hl, bc
-156+  8446 E9           					jp			(hl)
-157+  8447 18 1C        .jumpTable:			jr			.idle
-158+  8449 18 06        					jr			.move
-159+  844B 18 04        					jr			.move
-160+  844D 18 02        					jr			.move
-161+  844F 18 00        					jr			.move
-162+  8451
-163+  8451 DD 7E 03     .move:				ld			a, (ix+SPLAYER.time)
-164+  8454 3C           					inc			a
-165+  8455 FE 10        					cp			(8<<PLAYER_MOVE_DELAY_BITS)
-166+  8457 28 04        					jr			z, .moveDone
-167+  8459 DD 77 03     					ld			(ix+SPLAYER.time), a
-168+  845C C9           					ret
-169+  845D DD 36 02 00  .moveDone:			ld			(ix+SPLAYER.state), PLAYER_IDLE
-170+  8461 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-171+  8465              					;jr			.idle
-172+  8465
-173+  8465 21 85 83     .idle:				ld			hl, Input.left
-174+  8468 AF           					xor			a
-175+  8469 BE           					cp			(hl)
-176+  846A 28 0D        					jr			z, .goLeft
-177+  846C
-178+  846C 23           					inc			hl
-179+  846D BE           					cp			(hl)
-180+  846E 28 1A        					jr			z, .goRight
-181+  8470
-182+  8470 23           					inc			hl
-183+  8471 BE           					cp			(hl)
-184+  8472 28 28        					jr			z, .goUp
-185+  8474
-186+  8474 23           					inc			hl
-187+  8475 BE           					cp			(hl)
-188+  8476 28 35        					jr			z, .goDown
-189+  8478
-190+  8478 C9           					ret
-191+  8479
-192+  8479 DD 7E 00     .goLeft:			ld			a, (ix+SPLAYER.x)
-193+  847C B7           					or			a
-194+  847D C8           					ret			z
-195+  847E DD 35 00     					dec			(ix+SPLAYER.x)
-196+  8481 DD 36 02 02  					ld			(ix+SPLAYER.state), PLAYER_GO_LEFT
-197+  8485 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-198+  8489 C9           					ret
-199+  848A
-200+  848A DD 7E 00     .goRight:			ld			a, (ix+SPLAYER.x)
-201+  848D FE 1F        					cp			PLAYER_MAX_X
-202+  848F C8           					ret			z
-203+  8490 DD 34 00     					inc			(ix+SPLAYER.x)
-204+  8493 DD 36 02 04  					ld			(ix+SPLAYER.state), PLAYER_GO_RIGHT
-205+  8497 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-206+  849B C9           					ret
-207+  849C
-208+  849C DD 7E 01     .goUp:				ld			a, (ix+SPLAYER.y)
-209+  849F B7           					or			a
-210+  84A0 C8           					ret			z
-211+  84A1 DD 35 01     					dec			(ix+SPLAYER.y)
-212+  84A4 DD 36 02 06  					ld			(ix+SPLAYER.state), PLAYER_GO_UP
-213+  84A8 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-214+  84AC C9           					ret
-215+  84AD
-216+  84AD DD 7E 01     .goDown:			ld			a, (ix+SPLAYER.y)
-217+  84B0 FE 17        					cp			PLAYER_MAX_Y
-218+  84B2 C8           					ret			z
-219+  84B3 DD 34 01     					inc			(ix+SPLAYER.y)
-220+  84B6 DD 36 02 08  					ld			(ix+SPLAYER.state), PLAYER_GO_DOWN
-221+  84BA DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-222+  84BE C9           					ret
-223+  84BF
+  1+  867A
+  2+  867A              PLAYER_IDLE			equ			0
+  3+  867A              PLAYER_GO_LEFT		equ			2
+  4+  867A              PLAYER_GO_RIGHT		equ			4
+  5+  867A              PLAYER_GO_UP		equ			6
+  6+  867A              PLAYER_GO_DOWN		equ			8
+  7+  867A
+  8+  867A              PLAYER_MAX_X		equ 		31
+  9+  867A              PLAYER_MAX_Y		equ			23
+ 10+  867A
+ 11+  867A              PLAYER_MOVE_DELAY_BITS equ		1
+ 12+  867A
+ 13+  867A              PLAYER_ATTR			equ			FLOOR_ATTR
+ 14+  867A
+ 15+  867A              					struct 		SPLAYER
+ 16+  867A ~            x 					byte
+ 17+  867A ~            y 					byte
+ 18+  867A ~            state				byte
+ 19+  867A ~            time				byte
+ 20+  867A              					ends
+ 21+  867A
+ 22+  867A 05 02 00 00  player1:			SPLAYER		5,2,PLAYER_IDLE,0
+ 23+  867E
+ 24+  867E DD 36 02 00  InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
+ 25+  8682 C9           					ret
+ 26+  8683
+ 27+  8683 DD 4E 00     DrawPlayer:			ld			c, (ix+SPLAYER.x)
+ 28+  8686 DD 46 01     					ld			b, (ix+SPLAYER.y)
+ 29+  8689
+ 30+  8689 DD 6E 02     					ld			l, (ix+SPLAYER.state)
+ 31+  868C 26 00        					ld			h, 0
+ 32+  868E 11 93 86     					ld			de, .jumpTable
+ 33+  8691 19           					add			hl, de
+ 34+  8692 E9           					jp			(hl)
+ 35+  8693 18 08        .jumpTable:			jr			.drawIdle
+ 36+  8695 18 10        					jr			.drawLeft
+ 37+  8697 18 35        					jr			.drawRight
+ 38+  8699 18 6F        					jr			.drawUp
+ 39+  869B 18 57        					jr			.drawDown
+ 40+  869D
+ 41+  869D 21 00 00     .drawIdle:			ld			hl, 0x0000
+ 42+  86A0 54           					ld			d, h
+ 43+  86A1 5C           					ld			e, h
+ 44+  86A2 3E 4F        					ld			a, PLAYER_ATTR
+ 45+  86A4 C3 1D 82     					jp			DrawChar
+ 46+  86A7
+ 47+  86A7 DD 7E 03     .drawLeft:			ld			a, (ix+SPLAYER.time)
+ 48+  86AA              					dup			PLAYER_MOVE_DELAY_BITS
+ 49+  86AA 0F          >					rrca
+ 50+  86AB              					edup
+ 51+  86AB E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+ 52+  86AD 3C           					inc			a
+ 53+  86AE ED 44        					neg
+ 54+  86B0 5F           					ld			e, a
+ 55+  86B1 0F           					rrca
+ 56+  86B2 E6 01        					and			1
+ 57+  86B4 3C           					inc			a
+ 58+  86B5 6F           					ld			l, a
+ 59+  86B6 26 00        					ld			h, 0
+ 60+  86B8 54           					ld			d, h
+ 61+  86B9
+ 62+  86B9 E5           					push		hl
+ 63+  86BA D5           					push		de
+ 64+  86BB C5           					push		bc
+ 65+  86BC 3E 4F        					ld			a, PLAYER_ATTR
+ 66+  86BE 0C           					inc			c
+ 67+  86BF CD 1D 82     					call		DrawChar
+ 68+  86C2 C1           					pop			bc
+ 69+  86C3 D1           					pop			de
+ 70+  86C4 E1           					pop			hl
+ 71+  86C5
+ 72+  86C5 3E 08        					ld			a, 8
+ 73+  86C7 83           					add			a, e
+ 74+  86C8 5F           					ld			e, a
+ 75+  86C9 3E 4F        					ld			a, PLAYER_ATTR
+ 76+  86CB C3 1D 82     					jp			DrawChar
+ 77+  86CE
+ 78+  86CE DD 7E 03     .drawRight:			ld			a, (ix+SPLAYER.time)
+ 79+  86D1              					dup			PLAYER_MOVE_DELAY_BITS
+ 80+  86D1 0F          >					rrca
+ 81+  86D2              					edup
+ 82+  86D2 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+ 83+  86D4 3C           					inc			a
+ 84+  86D5 5F           					ld			e, a
+ 85+  86D6 0F           					rrca
+ 86+  86D7 E6 01        					and			1
+ 87+  86D9 C6 03        					add			a, 3
+ 88+  86DB 6F           					ld			l, a
+ 89+  86DC 26 00        					ld			h, 0
+ 90+  86DE 54           					ld			d, h
+ 91+  86DF
+ 92+  86DF E5           					push		hl
+ 93+  86E0 D5           					push		de
+ 94+  86E1 C5           					push		bc
+ 95+  86E2 3E 4F        					ld			a, PLAYER_ATTR
+ 96+  86E4 0D           					dec			c
+ 97+  86E5 CD 1D 82     					call		DrawChar
+ 98+  86E8 C1           					pop			bc
+ 99+  86E9 D1           					pop			de
+100+  86EA E1           					pop			hl
+101+  86EB
+102+  86EB 7B           					ld			a, e
+103+  86EC D6 08        					sub			8
+104+  86EE 5F           					ld			e, a
+105+  86EF 3E 4F        					ld			a, PLAYER_ATTR
+106+  86F1 C3 1D 82     					jp			DrawChar
+107+  86F4
+108+  86F4 DD 7E 03     .drawDown:			ld			a, (ix+SPLAYER.time)
+109+  86F7              					dup			PLAYER_MOVE_DELAY_BITS
+110+  86F7 0F          >					rrca
+111+  86F8              					edup
+112+  86F8 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+113+  86FA 3C           					inc			a
+114+  86FB 57           					ld			d, a
+115+  86FC E6 03        					and			3
+116+  86FE C6 05        					add			a, 5
+117+  8700 6F           					ld			l, a
+118+  8701 26 00        					ld			h, 0
+119+  8703 5C           					ld			e, h
+120+  8704
+121+  8704 3E 4F        					ld			a, PLAYER_ATTR
+122+  8706 05           					dec			b
+123+  8707 C3 1D 82     					jp			DrawChar
+124+  870A
+125+  870A DD 7E 03     .drawUp:			ld			a, (ix+SPLAYER.time)
+126+  870D              					dup			PLAYER_MOVE_DELAY_BITS
+127+  870D 0F          >					rrca
+128+  870E              					edup
+129+  870E E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+130+  8710 3C           					inc			a
+131+  8711 ED 44        					neg
+132+  8713 57           					ld			d, a
+133+  8714 E6 03        					and			3
+134+  8716 C6 05        					add			a, 5
+135+  8718 6F           					ld			l, a
+136+  8719 26 00        					ld			h, 0
+137+  871B 5C           					ld			e, h
+138+  871C
+139+  871C 3E 4F        					ld			a, PLAYER_ATTR
+140+  871E 04           					inc			b
+141+  871F D5           					push		de
+142+  8720 C5           					push		bc
+143+  8721 CD 1D 82     					call		DrawChar
+144+  8724 C1           					pop			bc
+145+  8725 D1           					pop			de
+146+  8726
+147+  8726 3E 08        					ld			a, 8
+148+  8728 82           					add			a, d
+149+  8729 57           					ld			d, a
+150+  872A C3 0F 82     					jp			DrawEmptyByte
+151+  872D
+152+  872D DD 6E 02     HandlePlayer:		ld			l, (ix+SPLAYER.state)
+153+  8730 26 00        					ld			h, 0
+154+  8732 01 37 87     					ld			bc, .jumpTable
+155+  8735 09           					add			hl, bc
+156+  8736 E9           					jp			(hl)
+157+  8737 18 1C        .jumpTable:			jr			.idle
+158+  8739 18 06        					jr			.move
+159+  873B 18 04        					jr			.move
+160+  873D 18 02        					jr			.move
+161+  873F 18 00        					jr			.move
+162+  8741
+163+  8741 DD 7E 03     .move:				ld			a, (ix+SPLAYER.time)
+164+  8744 3C           					inc			a
+165+  8745 FE 10        					cp			(8<<PLAYER_MOVE_DELAY_BITS)
+166+  8747 28 04        					jr			z, .moveDone
+167+  8749 DD 77 03     					ld			(ix+SPLAYER.time), a
+168+  874C C9           					ret
+169+  874D DD 36 02 00  .moveDone:			ld			(ix+SPLAYER.state), PLAYER_IDLE
+170+  8751 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+171+  8755              					;jr			.idle
+172+  8755
+173+  8755 21 8B 83     .idle:				ld			hl, Input.left
+174+  8758 AF           					xor			a
+175+  8759 BE           					cp			(hl)
+176+  875A 28 0D        					jr			z, .goLeft
+177+  875C
+178+  875C 23           					inc			hl
+179+  875D BE           					cp			(hl)
+180+  875E 28 20        					jr			z, .goRight
+181+  8760
+182+  8760 23           					inc			hl
+183+  8761 BE           					cp			(hl)
+184+  8762 28 33        					jr			z, .goUp
+185+  8764
+186+  8764 23           					inc			hl
+187+  8765 BE           					cp			(hl)
+188+  8766 28 46        					jr			z, .goDown
+189+  8768
+190+  8768 C9           					ret
+191+  8769
+192+  8769 DD 4E 00     .goLeft:			ld			c, (ix+SPLAYER.x)
+193+  876C DD 46 01     					ld			b, (ix+SPLAYER.y)
+194+  876F 0D           					dec			c
+195+  8770 CD 64 86     					call		CheckBlocked
+196+  8773 C0           					ret			nz
+197+  8774 DD 35 00     					dec			(ix+SPLAYER.x)
+198+  8777 DD 36 02 02  					ld			(ix+SPLAYER.state), PLAYER_GO_LEFT
+199+  877B DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+200+  877F C9           					ret
+201+  8780
+202+  8780 DD 4E 00     .goRight:			ld			c, (ix+SPLAYER.x)
+203+  8783 DD 46 01     					ld			b, (ix+SPLAYER.y)
+204+  8786 0C           					inc			c
+205+  8787 CD 64 86     					call		CheckBlocked
+206+  878A C0           					ret			nz
+207+  878B DD 34 00     					inc			(ix+SPLAYER.x)
+208+  878E DD 36 02 04  					ld			(ix+SPLAYER.state), PLAYER_GO_RIGHT
+209+  8792 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+210+  8796 C9           					ret
+211+  8797
+212+  8797 DD 4E 00     .goUp:				ld			c, (ix+SPLAYER.x)
+213+  879A DD 46 01     					ld			b, (ix+SPLAYER.y)
+214+  879D 05           					dec			b
+215+  879E CD 64 86     					call		CheckBlocked
+216+  87A1 C0           					ret			nz
+217+  87A2 DD 35 01     					dec			(ix+SPLAYER.y)
+218+  87A5 DD 36 02 06  					ld			(ix+SPLAYER.state), PLAYER_GO_UP
+219+  87A9 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+220+  87AD C9           					ret
+221+  87AE
+222+  87AE DD 4E 00     .goDown:			ld			c, (ix+SPLAYER.x)
+223+  87B1 DD 46 01     					ld			b, (ix+SPLAYER.y)
+224+  87B4 04           					inc			b
+225+  87B5 CD 64 86     					call		CheckBlocked
+226+  87B8 C0           					ret			nz
+227+  87B9 DD 34 01     					inc			(ix+SPLAYER.y)
+228+  87BC DD 36 02 08  					ld			(ix+SPLAYER.state), PLAYER_GO_DOWN
+229+  87C0 DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+230+  87C4 C9           					ret
+231+  87C5
 # file closed: player.asm
- 42   84BF
- 43   84BF 00 00 00...  					ds			0xa000-$
- 44   A000              					org			0xa000
- 45   A000
- 46   A000              gfx:				incbin		"gfx/gfx.scr"
- 47   BB00
- 48   BB00              					savesna 	"game.sna", start
- 49   BB00              					SLDOPT 		COMMENT WPMEM, LOGPOINT, ASSERTION
- 50   BB00
+ 46   87C5
+ 47   87C5 00 00 00...  					ds			0xa000-$
+ 48   A000              					org			0xa000
+ 49   A000
+ 50   A000              gfx:				incbin		"gfx/gfx.scr"
+ 51   BB00
+ 52   BB00              					savesna 	"game.sna", start
+ 53   BB00              					SLDOPT 		COMMENT WPMEM, LOGPOINT, ASSERTION
+ 54   BB00
 # file closed: game.asm
