@@ -3,6 +3,7 @@ LEVEL_WIDTH 		equ		 	32
 LEVEL_HEIGHT 		equ 		20
 
 FLOOR_ATTR 			equ 		01001111b
+SPHERE_ATTR 		equ 		01001110b
 WALL_ATTR  			equ 		00001101b
 
 					; пробел - пустое место
@@ -12,14 +13,14 @@ WALL_ATTR  			equ 		00001101b
 Level:				db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 					db			"X                              X"
 					db			"X                              X"
-					db			"X                              X"
-					db			"X                              X"
+					db			"X                      O       X"
+					db			"X   O                          X"
 					db			"X                              X"
 					db			"X        1                     X"
 					db			"X                              X"
-					db			"X                              X"
-					db			"X                              X"
-					db			"X                              X"
+					db			"X           O                  X"
+					db			"X                        O     X"
+					db			"X              O               X"
 					db			"X                              X"
 					db			"X                              X"
 					db			"X XXX XXX X X XXX XXX  X  XX X X"
@@ -60,12 +61,17 @@ DrawLevel:			ld			hl, LevelEnd
 					call		z, .drawFloor
 					cp			a, 'X'
 					call		z, .drawWall
+					cp			a, 'O'
+					call		z, .drawSphere
 					dec			c
 					jr			nz, .colLoop
 					djnz		.rowLoop
 					ret
 .drawFloor:			ld			a, FLOOR_ATTR
 					ld			de, 0x201
+					jr			.drawChar
+.drawSphere:		ld			a, SPHERE_ATTR
+					ld			de, 0x100
 					jr			.drawChar
 .drawWall:			ld			a, WALL_ATTR
 					ld			de, 0x200
@@ -85,6 +91,7 @@ DrawLevel:			ld			hl, LevelEnd
 	                ;   C = X (знакоместо)
     	            ;   B = Y (знакоместо)
     	            ; Output:
+    	            ;	A = предмет на карте
     	            ;   ZF=0 если ходить нельзя, ZF=1 если ходить можно
 
 CheckBlocked:		call		GetLevelAddr
@@ -101,13 +108,14 @@ CheckBlocked:		call		GetLevelAddr
 GetLevelAddr:		; HL = B * 32 + C; 32 = LEVEL_WIDTH
 					ld			l, b
 					ld			h, 0
-					ld			b, h
+					ld			e, c
+					ld			d, h
 					add			hl, hl			; *2
 					add			hl, hl			; *4
 					add			hl, hl			; *8
 					add			hl, hl			; *16
 					add			hl, hl			; *32
-					add			hl, bc
-					ld			bc, Level
-					add			hl, bc
+					add			hl, de
+					ld			de, Level
+					add			hl, de
 					ret

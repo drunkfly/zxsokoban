@@ -69,6 +69,30 @@ DrawEmptyByte:	; Расчитываем адрес назначения
     			ld		(de), a
     			ret
 
+DRAW_REPLACE 	equ		0			; nop
+DRAW_OR			equ		0xB6		; or (hl)
+
+                ; Input:
+                ;   A = mode (DRAW_OR или DRAW_REPLACE)
+
+SetDrawCharMode:ld		(DrawChar.hotPatch1), a
+				ld		(DrawChar.hotPatch2), a
+				ld		(DrawChar.hotPatch3), a
+				ld		(DrawChar.hotPatch4), a
+				ld		(DrawChar.hotPatch5), a
+				ld		(DrawChar.hotPatch6), a
+				ld		(DrawChar.hotPatch7), a
+				ld		(DrawChar.hotPatch8), a
+				ld		(DrawChar.hotPatch9), a
+				ld		(DrawChar.hotPatch10), a
+				ld		(DrawChar.hotPatch11), a
+				ld		(DrawChar.hotPatch12), a
+				ld		(DrawChar.hotPatch13), a
+				ld		(DrawChar.hotPatch14), a
+				ld		(DrawChar.hotPatch15), a
+				ld		(DrawChar.hotPatch16), a
+				ret
+
                 ; Input:
                 ;	A = атрибут
                 ;   E = дополнительный сдвиг по X (-7..7)
@@ -126,6 +150,7 @@ DrawChar:    	; Сохраняем А
 				db		.empty-.table
 
 .empty:       	xor		a
+.hotPatch1:		nop
 				ld      (hl), a
                 call	DownHL
                 djnz    .empty
@@ -134,6 +159,7 @@ DrawChar:    	; Сохраняем А
 .shiftM7:       ld      a, (de)
 				rrca
 				and		0x80
+.hotPatch2:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -144,6 +170,7 @@ DrawChar:    	; Сохраняем А
 				rrca
 				rrca
 				and		0xc0
+.hotPatch3:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -155,6 +182,7 @@ DrawChar:    	; Сохраняем А
 				rrca
 				edup
 				and		0xe0
+.hotPatch4:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -166,6 +194,7 @@ DrawChar:    	; Сохраняем А
 				rlca
 				edup
 				and		0xf0
+.hotPatch5:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -177,6 +206,7 @@ DrawChar:    	; Сохраняем А
 				rlca
 				edup
 				and		0xf8
+.hotPatch6:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -187,14 +217,16 @@ DrawChar:    	; Сохраняем А
 				rlca
 				rlca
 				and		0xfc
+.hotPatch7:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
                 djnz    .shiftM2
-                jr		.charDone
+                jp		.charDone
 
 .shiftM1:       ld      a, (de)
 				sla		a
+.hotPatch8:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -202,6 +234,7 @@ DrawChar:    	; Сохраняем А
                 jr		.charDone
 
 .noShift:       ld      a, (de)
+.hotPatch9:		nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -210,6 +243,7 @@ DrawChar:    	; Сохраняем А
 
 .shift1:       	ld      a, (de)
 				srl		a
+.hotPatch10:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -220,6 +254,7 @@ DrawChar:    	; Сохраняем А
 				rrca
 				rrca
 				and		0x3f
+.hotPatch11:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -231,6 +266,7 @@ DrawChar:    	; Сохраняем А
 				rrca
 				edup
 				and		0x1f
+.hotPatch12:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -242,6 +278,7 @@ DrawChar:    	; Сохраняем А
 				rrca
 				edup
 				and		0x0f
+.hotPatch13:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -253,6 +290,7 @@ DrawChar:    	; Сохраняем А
 				rlca
 				edup
 				and		0x07
+.hotPatch14:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -264,6 +302,7 @@ DrawChar:    	; Сохраняем А
 				rlca
 				edup
 				and		0x03
+.hotPatch15:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
@@ -273,6 +312,7 @@ DrawChar:    	; Сохраняем А
 .shift7:       	ld      a, (de)
 				rlca
 				and		0x01
+.hotPatch16:	nop
                 ld      (hl), a
                 inc     d
                 call	DownHL
