@@ -29,6 +29,8 @@ CalcScreenAddr: ; Преобразуем координату Y в пиксел�
                 rla
                 rla
                 and		0xf8
+; альтернативная точка входа, A = Y (пиксели)
+CalcScreenAddrPix:
                 ld		b, a
                 ; Расчитываем адрес на экране
                 rla                                 ; A = ? |Y5|Y4|Y3| ?| ?| ?| ?
@@ -50,15 +52,31 @@ CalcScreenAddr: ; Преобразуем координату Y в пиксел�
                 ret
 
                 ; Input:
+                ;   C = X (знакоместо)
+                ;   B = Y (знакоместо)
+                ;   D = дополнительный сдвиг по Y (-7..7)
+
+DrawEmptyByte:	; Расчитываем адрес назначения
+                ld		iyh, 0x40
+                ld		a, b
+                add		a, a		; *2
+                add		a, a		; *4
+                add		a, a		; *8
+                add		a, d
+    			call    CalcScreenAddrPix
+    			; Записываем нулевой байт
+    			xor		a
+    			ld		(de), a
+    			ret
+
+                ; Input:
                 ;	A = атрибут
-                ;   E = сдвиг (-7..7)
+                ;   E = дополнительный сдвиг по X (-7..7)
+                ;   D = дополнительный сдвиг по Y (-7..7)
                 ;   L = X спрайта (знакоместо)
                 ;   H = Y спрайта (знакоместо)
                 ;   C = X (знакоместо)
                 ;   B = Y (знакоместо)
-                ; Output:
-                ;   DE => sprite address
-                ;   HL => screen address
 
 DrawChar:    	; Сохраняем А
                 ex      af, af'
@@ -67,7 +85,13 @@ DrawChar:    	; Сохраняем А
                 ld		(.hotPatch+2), a
 				; Расчитываем адрес назначения
                 ld		iyh, 0x40
-                call    CalcScreenAddr
+                ld		a, b
+                add		a, a		; *2
+                add		a, a		; *4
+                add		a, a		; *8
+                add		a, d
+    			call    CalcScreenAddrPix
+                push	de
                 ; Преобразуем координату Y спрайта в адрес в SCR
                 ld		b, h
                 ld		c, l
@@ -103,7 +127,7 @@ DrawChar:    	; Сохраняем А
 
 .empty:       	xor		a
 				ld      (hl), a
-                inc     h
+                call	DownHL
                 djnz    .empty
                 jp		.charDone
 
@@ -112,7 +136,7 @@ DrawChar:    	; Сохраняем А
 				and		0x80
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM7
                 jp		.charDone
 
@@ -122,7 +146,7 @@ DrawChar:    	; Сохраняем А
 				and		0xc0
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM6
                 jp		.charDone
 
@@ -133,7 +157,7 @@ DrawChar:    	; Сохраняем А
 				and		0xe0
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM5
                 jp		.charDone
 
@@ -144,9 +168,9 @@ DrawChar:    	; Сохраняем А
 				and		0xf0
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM4
-                jr		.charDone
+                jp		.charDone
 
 .shiftM3:       ld      a, (de)
 				dup		3
@@ -155,9 +179,9 @@ DrawChar:    	; Сохраняем А
 				and		0xf8
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM3
-                jr		.charDone
+                jp		.charDone
 
 .shiftM2:       ld      a, (de)
 				rlca
@@ -165,7 +189,7 @@ DrawChar:    	; Сохраняем А
 				and		0xfc
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM2
                 jr		.charDone
 
@@ -173,14 +197,14 @@ DrawChar:    	; Сохраняем А
 				sla		a
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shiftM1
                 jr		.charDone
 
 .noShift:       ld      a, (de)
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .noShift
                 jr		.charDone
 
@@ -188,7 +212,7 @@ DrawChar:    	; Сохраняем А
 				srl		a
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift1
                 jr		.charDone
 
@@ -198,7 +222,7 @@ DrawChar:    	; Сохраняем А
 				and		0x3f
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift2
                 jr		.charDone
 
@@ -209,7 +233,7 @@ DrawChar:    	; Сохраняем А
 				and		0x1f
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift3
                 jr		.charDone
 
@@ -220,7 +244,7 @@ DrawChar:    	; Сохраняем А
 				and		0x0f
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift4
                 jr		.charDone
 
@@ -231,7 +255,7 @@ DrawChar:    	; Сохраняем А
 				and		0x07
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift5
                 jr		.charDone
 
@@ -242,7 +266,7 @@ DrawChar:    	; Сохраняем А
 				and		0x03
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift6
                 jr		.charDone
 
@@ -251,14 +275,16 @@ DrawChar:    	; Сохраняем А
 				and		0x01
                 ld      (hl), a
                 inc     d
-                inc     h
+                call	DownHL
                 djnz    .shift7
                 ;jr		.charDone
 
-.charDone: 		; Расчитываем адрес в области атрибутов
-     			dec     h
+.charDone: 		; Получаем из стека начальный адрес на экране
+				pop		hl
+				ld		c, h				; сохраняем старший байт в C для проверки внизу
+				; Расчитываем адрес в области атрибутов
                 ld      a, h
-                rra
+       			rra
                 rra
                 rra
                 and     0x03
@@ -268,4 +294,33 @@ DrawChar:    	; Сохраняем А
                 ex      af, af'
                 ; Записываем атрибут
                 ld      (hl), a
+                ; Сохраняем атрибут в B
+                ld		b, a
+                ; Проверяем, нужно ли рисовать второй атрибут
+                ld		a, 7
+                and		c
+                ret		z				; мы на границе знакоместа, второй атрибут не нужен
+				; Переходим на следующую строку в атрибутах
+                ld		de, 32
+                add		hl, de
+				; Записываем второй атрибут
+                ld		(hl), b
                 ret
+
+                ; Input:
+                ;	HL => адрес байта (8 пикселей) на экране
+                ; Output:
+                ;   HL => адрес байта (8 пикселей) в следующей строке (Y = Y + 1)
+
+DownHL:			inc		h
+				ld		a, 00000111b	; 7=8-1;  остаток от деления на 8 
+				and		h
+				ret		nz
+				ld		a, l			; L = L + 32
+				sub		-32
+				ld		l, a
+				sbc		a, a			; 0 = no carry, -1 (0xff 11111111) = was carry
+				and		-8				; 0 = no carry, -8 (0xf8 11111000) = was carry
+				add		a, h
+				ld		h, a
+				ret

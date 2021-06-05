@@ -10,6 +10,8 @@ PLAYER_MAX_Y		equ			23
 
 PLAYER_MOVE_DELAY_BITS equ		1
 
+PLAYER_ATTR			equ			0x4f
+
 					struct 		SPLAYER
 x 					byte
 y 					byte
@@ -37,8 +39,9 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					jr			.drawDown
 
 .drawIdle:			ld			hl, 0x0000
-					ld			a, 0x47
+					ld			d, h
 					ld			e, h
+					ld			a, PLAYER_ATTR
 					jp			DrawChar
 
 .drawLeft:			ld			a, (ix+SPLAYER.time)
@@ -54,22 +57,22 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					inc			a
 					ld			l, a
 					ld			h, 0
+					ld			d, h
 
 					push		hl
 					push		de
 					push		bc
-					ld			a, 0x47
+					ld			a, PLAYER_ATTR
 					inc			c
 					call		DrawChar
 					pop			bc
 					pop			de
 					pop			hl
 
-					ex			af, af'
 					ld			a, 8
 					add			a, e
 					ld			e, a
-					ex			af, af'
+					ld			a, PLAYER_ATTR
 					jp			DrawChar
 
 .drawRight:			ld			a, (ix+SPLAYER.time)
@@ -84,22 +87,22 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					add			a, 3
 					ld			l, a
 					ld			h, 0
+					ld			d, h
 
 					push		hl
 					push		de
 					push		bc
-					ld			a, 0x47
+					ld			a, PLAYER_ATTR
 					dec			c
 					call		DrawChar
 					pop			bc
 					pop			de
 					pop			hl
 
-					ex			af, af'
 					ld			a, e
 					sub			8
 					ld			e, a
-					ex			af, af'
+					ld			a, PLAYER_ATTR
 					jp			DrawChar
 
 .drawDown:			ld			a, (ix+SPLAYER.time)
@@ -108,29 +111,15 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					edup
 					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
 					inc			a
-					ld			e, a
+					ld			d, a
 					and			3
 					add			a, 5
 					ld			l, a
 					ld			h, 0
+					ld			e, h
 
-					push		hl
-					push		de
-					push		bc
-					ld			a, 0x47
-				ld e, 8
+					ld			a, PLAYER_ATTR
 					dec			b
-					call		DrawChar
-					pop			bc
-					pop			de
-					pop			hl
-
-					ex			af, af'
-					;ld			a, e
-					;sub			8
-					;ld			e, a
-				ld e, 0
-					ex			af, af'
 					jp			DrawChar
 
 .drawUp:			ld			a, (ix+SPLAYER.time)
@@ -139,30 +128,26 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					edup
 					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
 					inc			a
-					ld			e, a
+					neg
+					ld			d, a
 					and			3
 					add			a, 5
 					ld			l, a
 					ld			h, 0
+					ld			e, h
 
-					push		hl
+					ld			a, PLAYER_ATTR
+					inc			b
 					push		de
 					push		bc
-					ld			a, 0x47
-					inc			b
-				ld e, 8
 					call		DrawChar
 					pop			bc
 					pop			de
-					pop			hl
 
-					ex			af, af'
-					;ld			a, e
-					;sub			8
-					;ld			e, a
-				ld e, 0
-					ex			af, af'
-					jp			DrawChar
+					ld			a, 8
+					add			a, d
+					ld			d, a
+					jp			DrawEmptyByte
 
 HandlePlayer:		ld			l, (ix+SPLAYER.state)
 					ld			h, 0
