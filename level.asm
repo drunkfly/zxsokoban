@@ -5,6 +5,7 @@ LEVEL_HEIGHT 		equ 		20
 FLOOR_ATTR 			equ 		01001111b
 SPHERE_ATTR 		equ 		01001110b
 WALL_ATTR  			equ 		00001101b
+TARGET_ATTR			equ			01001010b
 
 					; пробел - пустое место
 					; X - стена
@@ -13,14 +14,14 @@ WALL_ATTR  			equ 		00001101b
 Level:				db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 					db			"X                              X"
 					db			"X                              X"
-					db			"X                      O       X"
-					db			"X   O                          X"
+					db			"X                      O    *  X"
+					db			"X * O                          X"
 					db			"X                              X"
 					db			"X        1                     X"
 					db			"X                              X"
-					db			"X           O                  X"
-					db			"X                        O     X"
-					db			"X              O               X"
+					db			"X        *  O                  X"
+					db			"X                        O  *  X"
+					db			"X           *  O               X"
 					db			"X                              X"
 					db			"X                              X"
 					db			"X XXX XXX X X XXX XXX  X  XX X X"
@@ -39,6 +40,8 @@ InitLevel:			ld			hl, LevelEnd
 					ld			a, (hl)
 					cp			a, '1'
 					call		z, .handlePlayerStart
+					cp			a, '*'
+					call		z, .handleTarget
 					djnz		.colLoop
 					dec			c
 					jr			nz, .rowLoop
@@ -50,6 +53,8 @@ InitLevel:			ld			hl, LevelEnd
 					ld			a, c
 					dec			a
 					ld			(player1.y), a
+					ret
+.handleTarget:		ld			(hl), ' '
 					ret
 
 DrawLevel:			ld			hl, LevelEnd
