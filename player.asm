@@ -119,13 +119,13 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			a, DRAW_REPLACE
 					jp			SetDrawCharMode
 
-.drawShiftRight:	push		bc
-					inc			c
-					ld			hl, 0x0100
-					ld			de, 0
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			bc
+.drawShiftRight:	;push		bc
+					;inc			c
+					;ld			hl, 0x0100
+					;ld			de, 0
+					;ld			a, SPHERE_ATTR
+					;call		DrawChar
+					;pop			bc
 
 					ld			a, (ix+SPLAYER.time)
 					dup			PLAYER_MOVE_DELAY_BITS
@@ -135,6 +135,7 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					inc			a
 					ld			e, a
 
+					and			3
 					ld			h, 0x01
 					ld			l, a
 					ld			d, 0
@@ -164,8 +165,11 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					pop			af
 
 					rrca
-					and			3
+					and			1
 					add			a, 3
+					ld			l, a
+					ld			h, 0
+					ld			d, h
 
 					ld			a, DRAW_REPLACE
 					call		SetDrawCharMode
@@ -315,6 +319,67 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			d, a
 					jp			DrawEmptyByte
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+					macro 		PLAYERGO state, shift
+
+					ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+				if state == PLAYER_GO_UP
+					dec			b
+				elseif state == PLAYER_GO_DOWN
+					inc			b
+				elseif state == PLAYER_GO_LEFT
+					dec			c
+				elseif state == PLAYER_GO_RIGHT
+					inc			c
+				endif
+					call		CheckBlocked
+					jr			nz, .tryShift
+					ld			a, state
+.doGo:			if state == PLAYER_GO_DOWN || state == PLAYER_GO_UP
+					ld			(ix+SPLAYER.y), b
+				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+					ld			(ix+SPLAYER.x), c
+				endif
+					ld			(ix+SPLAYER.state), a
+					ld			(ix+SPLAYER.time), 0
+					ret
+.tryShift:			cp			'O'
+					ret			nz
+				if state == PLAYER_GO_UP
+					dec			b
+				elseif state == PLAYER_GO_DOWN
+					inc			b
+				elseif state == PLAYER_GO_LEFT
+					dec			c
+				elseif state == PLAYER_GO_RIGHT
+					inc			c
+				endif
+					call		CheckBlocked
+					ret			nz
+					ld			(hl), 'O'
+				if state == PLAYER_GO_UP
+					inc			b
+					ld			de, 32
+					add			hl, de
+				elseif state == PLAYER_GO_DOWN
+					dec			b
+					ld			de, -32
+					add			hl, de
+				elseif state == PLAYER_GO_LEFT
+					inc			c
+					inc			hl
+				elseif state == PLAYER_GO_RIGHT
+					dec			c
+					dec			hl
+				endif
+					ld			(hl), ' '
+					ld			a, shift
+					jr			.doGo
+
+					endm
+
 HandlePlayer:		ld			l, (ix+SPLAYER.state)
 					ld			h, 0
 					ld			bc, .jumpTable
@@ -359,92 +424,7 @@ HandlePlayer:		ld			l, (ix+SPLAYER.state)
 
 					ret
 
-.goLeft:			ld			c, (ix+SPLAYER.x)
-					ld			b, (ix+SPLAYER.y)
-					dec			c
-					call		CheckBlocked
-					jr			nz, .tryShiftLeft
-					ld			a, PLAYER_GO_LEFT
-.doGoLeft:			ld			(ix+SPLAYER.x), c
-					ld			(ix+SPLAYER.state), a
-					ld			(ix+SPLAYER.time), 0
-					ret
-.tryShiftLeft:		cp			'O'
-					ret			nz
-					dec			c
-					call		CheckBlocked
-					ret			nz
-					inc			c
-					ld			(hl), 'O'
-					inc			hl
-					ld			(hl), ' '
-					ld			a, PLAYER_SHIFT_LEFT
-					jr			.doGoLeft
-					
-.goRight:			ld			c, (ix+SPLAYER.x)
-					ld			b, (ix+SPLAYER.y)
-					inc			c
-					call		CheckBlocked
-					jr			nz, .tryShiftRight
-					ld			a, PLAYER_GO_RIGHT
-.doGoRight:			ld			(ix+SPLAYER.x), c
-					ld			(ix+SPLAYER.state), a
-					ld			(ix+SPLAYER.time), 0
-					ret
-.tryShiftRight:		cp			'O'
-					ret			nz
-					inc			c
-					call		CheckBlocked
-					ret			nz
-					dec			c
-					ld			(hl), 'O'
-					dec			hl
-					ld			(hl), ' '
-					ld			a, PLAYER_SHIFT_RIGHT
-					jr			.doGoRight
-
-.goUp:				ld			c, (ix+SPLAYER.x)
-					ld			b, (ix+SPLAYER.y)
-					dec			b
-					call		CheckBlocked
-					jr			nz, .tryShiftUp
-					ld			a, PLAYER_GO_UP
-.doGoUp:			ld			(ix+SPLAYER.y), b
-					ld			(ix+SPLAYER.state), a
-					ld			(ix+SPLAYER.time), 0
-					ret
-.tryShiftUp:		cp			'O'
-					ret			nz
-					dec			b
-					call		CheckBlocked
-					ret			nz
-					inc			b
-					ld			(hl), 'O'
-					ld			de, 32
-					add			hl, de
-					ld			(hl), ' '
-					ld			a, PLAYER_SHIFT_UP
-					jr			.doGoUp
-
-.goDown:			ld			c, (ix+SPLAYER.x)
-					ld			b, (ix+SPLAYER.y)
-					inc			b
-					call		CheckBlocked
-					jr			nz, .tryShiftDown
-					ld			a, PLAYER_GO_DOWN
-.doGoDown:			ld			(ix+SPLAYER.y), b
-					ld			(ix+SPLAYER.state), a
-					ld			(ix+SPLAYER.time), 0
-					ret
-.tryShiftDown:		cp			'O'
-					ret			nz
-					inc			b
-					call		CheckBlocked
-					ret			nz
-					dec			b
-					ld			(hl), 'O'
-					ld			de, -32
-					add			hl, de
-					ld			(hl), ' '
-					ld			a, PLAYER_SHIFT_DOWN
-					jr			.doGoDown
+.goLeft:			PLAYERGO	PLAYER_GO_LEFT, PLAYER_SHIFT_LEFT
+.goRight:			PLAYERGO	PLAYER_GO_RIGHT, PLAYER_SHIFT_RIGHT
+.goUp:				PLAYERGO	PLAYER_GO_UP, PLAYER_SHIFT_UP
+.goDown:			PLAYERGO	PLAYER_GO_DOWN, PLAYER_SHIFT_DOWN
