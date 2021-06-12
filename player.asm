@@ -28,6 +28,163 @@ player1:			SPLAYER		5,2,PLAYER_IDLE,0
 InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 					ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+					macro		DRAWHORZ left, shift
+
+					ld			a, (ix+SPLAYER.time)
+					dup			PLAYER_MOVE_DELAY_BITS
+					rrca
+					edup
+					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+					inc			a
+				if left
+					neg
+				endif
+					ld			e, a
+
+				if shift
+					and			3
+					ld			h, 0x01
+					ld			l, a
+					ld			d, 0
+
+					push		af
+
+					push		bc
+					push		de
+					push		hl
+					ld			a, SPHERE_ATTR
+					call		DrawChar
+					pop			hl
+					pop			de
+					pop			bc
+
+					push		bc
+					push		de
+				if left
+					dec			c
+					ld			a, 8
+					add			a, e
+				else
+					inc			c
+					ld			a, e
+					sub			8
+				endif
+					ld			e, a
+					ld			a, SPHERE_ATTR
+					call		DrawChar
+					pop			de
+					pop			bc
+
+					pop			af
+				endif ; shift
+
+					rrca
+					and			1
+				if left
+					inc			a
+				else
+					add			a, 3
+				endif
+					ld			l, a
+					ld			h, 0
+					ld			d, h
+
+					push		hl
+					push		de
+					push		bc
+					ld			a, PLAYER_ATTR
+				if left
+					inc			c
+				else
+					dec			c
+				endif
+					call		DrawChar
+					pop			bc
+					pop			de
+					pop			hl
+
+				if shift
+					ld			a, DRAW_OR
+					call		SetDrawCharMode
+				endif
+
+					ld			a, e
+				if left
+					add			a, 8
+				else
+					sub			8
+				endif
+					ld			e, a
+					ld			a, PLAYER_ATTR
+				if shift
+					call		DrawChar
+					ld			a, DRAW_REPLACE
+					jp			SetDrawCharMode
+				else
+					jp			DrawChar
+				endif
+
+					endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+					macro		DRAWVERT up, shift
+
+					ld			a, (ix+SPLAYER.time)
+					dup			PLAYER_MOVE_DELAY_BITS
+					rrca
+					edup
+					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+					inc			a
+				if up
+					neg
+				endif
+					ld			d, a
+					ld			e, 0
+
+					and			3
+
+				if shift
+					push		af
+					push		de
+					push		bc
+					ld			h, 1
+					ld			l, a
+					ld			a, SPHERE_ATTR
+					call		DrawChar
+					pop			bc
+					pop			de
+					pop			af
+			 	endif ; shift
+
+					add			a, 5
+					ld			l, a
+					ld			h, e
+
+					ld			a, PLAYER_ATTR
+				if up
+					inc			b
+					push		de
+					push		bc
+					call		DrawChar
+					pop			bc
+					pop			de
+
+					ld			a, 8
+					add			a, d
+					ld			d, a
+					jp			DrawEmptyByte
+				else
+					dec			b
+					jp			DrawChar
+				endif
+
+					endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			b, (ix+SPLAYER.y)
 
@@ -52,272 +209,15 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			a, PLAYER_ATTR
 					jp			DrawChar
 
-.drawShiftLeft:		ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					neg
-					ld			e, a
+.drawShiftLeft:		DRAWHORZ 	1, 1
+.drawShiftRight:	DRAWHORZ 	0, 1
+.drawShiftUp:		DRAWVERT	1, 1
+.drawShiftDown:		DRAWVERT	0, 1
 
-					and			3
-					ld			h, 0x01
-					ld			l, a
-					ld			d, 0
-
-					push		af
-
-					push		bc
-					push		de
-					push		hl
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			hl
-					pop			de
-					pop			bc
-
-					push		bc
-					push		de
-					dec			c
-					ld			a, 8
-					add			a, e
-					ld			e, a
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			de
-					pop			bc
-
-					pop			af
-
-					rrca
-					and			1
-					inc			a
-					ld			l, a
-					ld			h, 0
-					ld			d, h
-
-					push		hl
-					push		de
-					push		bc
-					ld			a, PLAYER_ATTR
-					inc			c
-					call		DrawChar
-					pop			bc
-					pop			de
-					pop			hl
-
-					ld			a, DRAW_OR
-					call		SetDrawCharMode
-
-					ld			a, 8
-					add			a, e
-					ld			e, a
-					ld			a, PLAYER_ATTR
-					call		DrawChar
-
-					ld			a, DRAW_REPLACE
-					jp			SetDrawCharMode
-
-.drawShiftRight:	;push		bc
-					;inc			c
-					;ld			hl, 0x0100
-					;ld			de, 0
-					;ld			a, SPHERE_ATTR
-					;call		DrawChar
-					;pop			bc
-
-					ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					ld			e, a
-
-					and			3
-					ld			h, 0x01
-					ld			l, a
-					ld			d, 0
-
-					push		af
-
-					push		bc
-					push		de
-					push		hl
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			hl
-					pop			de
-					pop			bc
-
-					push		bc
-					push		de
-					inc			c
-					ld			a, e
-					sub			8
-					ld			e, a
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			de
-					pop			bc
-
-					pop			af
-
-					rrca
-					and			1
-					add			a, 3
-					ld			l, a
-					ld			h, 0
-					ld			d, h
-
-					ld			a, DRAW_REPLACE
-					call		SetDrawCharMode
-
-					push		hl
-					push		de
-					push		bc
-					ld			a, PLAYER_ATTR
-					dec			c
-					call		DrawChar
-					pop			bc
-					pop			de
-					pop			hl
-
-					ld			a, DRAW_OR
-					call		SetDrawCharMode
-
-					ld			a, e
-					sub			8
-					ld			e, a
-					ld			a, PLAYER_ATTR
-					call		DrawChar
-
-					ld			a, DRAW_REPLACE
-					jp			SetDrawCharMode
-
-.drawShiftUp:		push		bc
-					dec			b
-					ld			hl, 0x0100
-					ld			de, 0
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			bc
-					jr			.drawUp
-
-.drawShiftDown:		push		bc
-					inc			b
-					ld			hl, 0x0100
-					ld			de, 0
-					ld			a, SPHERE_ATTR
-					call		DrawChar
-					pop			bc
-					jr			.drawDown
-
-.drawLeft:			ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					neg
-					ld			e, a
-					rrca
-					and			1
-					inc			a
-					ld			l, a
-					ld			h, 0
-					ld			d, h
-
-					push		hl
-					push		de
-					push		bc
-					ld			a, PLAYER_ATTR
-					inc			c
-					call		DrawChar
-					pop			bc
-					pop			de
-					pop			hl
-
-					ld			a, 8
-					add			a, e
-					ld			e, a
-					ld			a, PLAYER_ATTR
-					jp			DrawChar
-
-.drawRight:			ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					ld			e, a
-					rrca
-					and			1
-					add			a, 3
-					ld			l, a
-					ld			h, 0
-					ld			d, h
-
-					push		hl
-					push		de
-					push		bc
-					ld			a, PLAYER_ATTR
-					dec			c
-					call		DrawChar
-					pop			bc
-					pop			de
-					pop			hl
-
-					ld			a, e
-					sub			8
-					ld			e, a
-					ld			a, PLAYER_ATTR
-					jp			DrawChar
-
-.drawDown:			ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					ld			d, a
-					and			3
-					add			a, 5
-					ld			l, a
-					ld			h, 0
-					ld			e, h
-
-					ld			a, PLAYER_ATTR
-					dec			b
-					jp			DrawChar
-
-.drawUp:			ld			a, (ix+SPLAYER.time)
-					dup			PLAYER_MOVE_DELAY_BITS
-					rrca
-					edup
-					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-					inc			a
-					neg
-					ld			d, a
-					and			3
-					add			a, 5
-					ld			l, a
-					ld			h, 0
-					ld			e, h
-
-					ld			a, PLAYER_ATTR
-					inc			b
-					push		de
-					push		bc
-					call		DrawChar
-					pop			bc
-					pop			de
-
-					ld			a, 8
-					add			a, d
-					ld			d, a
-					jp			DrawEmptyByte
+.drawRight:			DRAWHORZ	0, 0
+.drawLeft:			DRAWHORZ	1, 0
+.drawDown:			DRAWVERT	0, 0
+.drawUp:			DRAWVERT	1, 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

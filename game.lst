@@ -340,7 +340,7 @@
  30   81CF CD 9D 83     					call		ReadInput
  31   81D2
  32   81D2 DD 21 C9 86  					ld			ix, player1
- 33   81D6 CD 57 88     					call		HandlePlayer
+ 33   81D6 CD 87 88     					call		HandlePlayer
  34   81D9
  35   81D9 18 EC        					jr			.mainLoop
  36   81DB
@@ -1069,634 +1069,1114 @@
  28+  86CD DD 36 02 00  InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
  29+  86D1 C9           					ret
  30+  86D2
- 31+  86D2 DD 4E 00     DrawPlayer:			ld			c, (ix+SPLAYER.x)
- 32+  86D5 DD 46 01     					ld			b, (ix+SPLAYER.y)
- 33+  86D8
- 34+  86D8 DD 6E 02     					ld			l, (ix+SPLAYER.state)
- 35+  86DB 26 00        					ld			h, 0
- 36+  86DD 11 E2 86     					ld			de, .jumpTable
- 37+  86E0 19           					add			hl, de
- 38+  86E1 E9           					jp			(hl)
- 39+  86E2 C3 FD 86     .jumpTable:			jp			.drawIdle
- 40+  86E5 C3 D1 87     					jp			.drawLeft
- 41+  86E8 C3 F8 87     					jp			.drawRight
- 42+  86EB C3 34 88     					jp			.drawUp
- 43+  86EE C3 1E 88     					jp			.drawDown
- 44+  86F1 C3 07 87     					jp			.drawShiftLeft
- 45+  86F4 C3 5A 87     					jp			.drawShiftRight
- 46+  86F7 C3 B1 87     					jp			.drawShiftUp
- 47+  86FA C3 C1 87     					jp			.drawShiftDown
- 48+  86FD
- 49+  86FD 21 00 00     .drawIdle:			ld			hl, 0x0000
- 50+  8700 54           					ld			d, h
- 51+  8701 5C           					ld			e, h
- 52+  8702 3E 4F        					ld			a, PLAYER_ATTR
- 53+  8704 C3 4E 82     					jp			DrawChar
- 54+  8707
- 55+  8707 DD 7E 03     .drawShiftLeft:		ld			a, (ix+SPLAYER.time)
- 56+  870A              					dup			PLAYER_MOVE_DELAY_BITS
- 57+  870A 0F          >					rrca
- 58+  870B              					edup
- 59+  870B E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
- 60+  870D 3C           					inc			a
- 61+  870E ED 44        					neg
- 62+  8710 5F           					ld			e, a
- 63+  8711
- 64+  8711 E6 03        					and			3
- 65+  8713 26 01        					ld			h, 0x01
- 66+  8715 6F           					ld			l, a
- 67+  8716 16 00        					ld			d, 0
- 68+  8718
- 69+  8718 F5           					push		af
- 70+  8719
- 71+  8719 C5           					push		bc
- 72+  871A D5           					push		de
- 73+  871B E5           					push		hl
- 74+  871C 3E 4E        					ld			a, SPHERE_ATTR
- 75+  871E CD 4E 82     					call		DrawChar
- 76+  8721 E1           					pop			hl
- 77+  8722 D1           					pop			de
- 78+  8723 C1           					pop			bc
- 79+  8724
- 80+  8724 C5           					push		bc
- 81+  8725 D5           					push		de
- 82+  8726 0D           					dec			c
- 83+  8727 3E 08        					ld			a, 8
- 84+  8729 83           					add			a, e
- 85+  872A 5F           					ld			e, a
- 86+  872B 3E 4E        					ld			a, SPHERE_ATTR
- 87+  872D CD 4E 82     					call		DrawChar
- 88+  8730 D1           					pop			de
- 89+  8731 C1           					pop			bc
- 90+  8732
- 91+  8732 F1           					pop			af
- 92+  8733
- 93+  8733 0F           					rrca
- 94+  8734 E6 01        					and			1
- 95+  8736 3C           					inc			a
- 96+  8737 6F           					ld			l, a
- 97+  8738 26 00        					ld			h, 0
- 98+  873A 54           					ld			d, h
- 99+  873B
-100+  873B E5           					push		hl
-101+  873C D5           					push		de
-102+  873D C5           					push		bc
-103+  873E 3E 4F        					ld			a, PLAYER_ATTR
-104+  8740 0C           					inc			c
-105+  8741 CD 4E 82     					call		DrawChar
-106+  8744 C1           					pop			bc
-107+  8745 D1           					pop			de
-108+  8746 E1           					pop			hl
-109+  8747
-110+  8747 3E B6        					ld			a, DRAW_OR
-111+  8749 CD 1D 82     					call		SetDrawCharMode
-112+  874C
-113+  874C 3E 08        					ld			a, 8
-114+  874E 83           					add			a, e
-115+  874F 5F           					ld			e, a
-116+  8750 3E 4F        					ld			a, PLAYER_ATTR
-117+  8752 CD 4E 82     					call		DrawChar
-118+  8755
-119+  8755 3E 00        					ld			a, DRAW_REPLACE
-120+  8757 C3 1D 82     					jp			SetDrawCharMode
-121+  875A
-122+  875A              .drawShiftRight:	;push		bc
-123+  875A              					;inc			c
-124+  875A              					;ld			hl, 0x0100
-125+  875A              					;ld			de, 0
-126+  875A              					;ld			a, SPHERE_ATTR
-127+  875A              					;call		DrawChar
-128+  875A              					;pop			bc
-129+  875A
-130+  875A DD 7E 03     					ld			a, (ix+SPLAYER.time)
-131+  875D              					dup			PLAYER_MOVE_DELAY_BITS
-132+  875D 0F          >					rrca
-133+  875E              					edup
-134+  875E E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-135+  8760 3C           					inc			a
-136+  8761 5F           					ld			e, a
-137+  8762
-138+  8762 E6 03        					and			3
-139+  8764 26 01        					ld			h, 0x01
-140+  8766 6F           					ld			l, a
-141+  8767 16 00        					ld			d, 0
-142+  8769
-143+  8769 F5           					push		af
-144+  876A
-145+  876A C5           					push		bc
-146+  876B D5           					push		de
-147+  876C E5           					push		hl
-148+  876D 3E 4E        					ld			a, SPHERE_ATTR
-149+  876F CD 4E 82     					call		DrawChar
-150+  8772 E1           					pop			hl
-151+  8773 D1           					pop			de
-152+  8774 C1           					pop			bc
-153+  8775
-154+  8775 C5           					push		bc
-155+  8776 D5           					push		de
-156+  8777 0C           					inc			c
-157+  8778 7B           					ld			a, e
-158+  8779 D6 08        					sub			8
-159+  877B 5F           					ld			e, a
-160+  877C 3E 4E        					ld			a, SPHERE_ATTR
-161+  877E CD 4E 82     					call		DrawChar
-162+  8781 D1           					pop			de
-163+  8782 C1           					pop			bc
-164+  8783
-165+  8783 F1           					pop			af
-166+  8784
-167+  8784 0F           					rrca
-168+  8785 E6 01        					and			1
-169+  8787 C6 03        					add			a, 3
-170+  8789 6F           					ld			l, a
-171+  878A 26 00        					ld			h, 0
-172+  878C 54           					ld			d, h
-173+  878D
-174+  878D 3E 00        					ld			a, DRAW_REPLACE
-175+  878F CD 1D 82     					call		SetDrawCharMode
-176+  8792
-177+  8792 E5           					push		hl
-178+  8793 D5           					push		de
-179+  8794 C5           					push		bc
-180+  8795 3E 4F        					ld			a, PLAYER_ATTR
-181+  8797 0D           					dec			c
-182+  8798 CD 4E 82     					call		DrawChar
-183+  879B C1           					pop			bc
-184+  879C D1           					pop			de
-185+  879D E1           					pop			hl
-186+  879E
-187+  879E 3E B6        					ld			a, DRAW_OR
-188+  87A0 CD 1D 82     					call		SetDrawCharMode
-189+  87A3
-190+  87A3 7B           					ld			a, e
-191+  87A4 D6 08        					sub			8
-192+  87A6 5F           					ld			e, a
-193+  87A7 3E 4F        					ld			a, PLAYER_ATTR
-194+  87A9 CD 4E 82     					call		DrawChar
-195+  87AC
-196+  87AC 3E 00        					ld			a, DRAW_REPLACE
-197+  87AE C3 1D 82     					jp			SetDrawCharMode
-198+  87B1
-199+  87B1 C5           .drawShiftUp:		push		bc
-200+  87B2 05           					dec			b
-201+  87B3 21 00 01     					ld			hl, 0x0100
-202+  87B6 11 00 00     					ld			de, 0
-203+  87B9 3E 4E        					ld			a, SPHERE_ATTR
-204+  87BB CD 4E 82     					call		DrawChar
-205+  87BE C1           					pop			bc
-206+  87BF 18 73        					jr			.drawUp
-207+  87C1
-208+  87C1 C5           .drawShiftDown:		push		bc
-209+  87C2 04           					inc			b
-210+  87C3 21 00 01     					ld			hl, 0x0100
-211+  87C6 11 00 00     					ld			de, 0
-212+  87C9 3E 4E        					ld			a, SPHERE_ATTR
-213+  87CB CD 4E 82     					call		DrawChar
-214+  87CE C1           					pop			bc
-215+  87CF 18 4D        					jr			.drawDown
-216+  87D1
-217+  87D1 DD 7E 03     .drawLeft:			ld			a, (ix+SPLAYER.time)
-218+  87D4              					dup			PLAYER_MOVE_DELAY_BITS
-219+  87D4 0F          >					rrca
-220+  87D5              					edup
-221+  87D5 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-222+  87D7 3C           					inc			a
-223+  87D8 ED 44        					neg
-224+  87DA 5F           					ld			e, a
-225+  87DB 0F           					rrca
-226+  87DC E6 01        					and			1
-227+  87DE 3C           					inc			a
-228+  87DF 6F           					ld			l, a
-229+  87E0 26 00        					ld			h, 0
-230+  87E2 54           					ld			d, h
-231+  87E3
-232+  87E3 E5           					push		hl
-233+  87E4 D5           					push		de
-234+  87E5 C5           					push		bc
-235+  87E6 3E 4F        					ld			a, PLAYER_ATTR
-236+  87E8 0C           					inc			c
-237+  87E9 CD 4E 82     					call		DrawChar
-238+  87EC C1           					pop			bc
-239+  87ED D1           					pop			de
-240+  87EE E1           					pop			hl
-241+  87EF
-242+  87EF 3E 08        					ld			a, 8
-243+  87F1 83           					add			a, e
-244+  87F2 5F           					ld			e, a
-245+  87F3 3E 4F        					ld			a, PLAYER_ATTR
-246+  87F5 C3 4E 82     					jp			DrawChar
-247+  87F8
-248+  87F8 DD 7E 03     .drawRight:			ld			a, (ix+SPLAYER.time)
-249+  87FB              					dup			PLAYER_MOVE_DELAY_BITS
-250+  87FB 0F          >					rrca
-251+  87FC              					edup
-252+  87FC E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-253+  87FE 3C           					inc			a
-254+  87FF 5F           					ld			e, a
-255+  8800 0F           					rrca
-256+  8801 E6 01        					and			1
-257+  8803 C6 03        					add			a, 3
-258+  8805 6F           					ld			l, a
-259+  8806 26 00        					ld			h, 0
-260+  8808 54           					ld			d, h
-261+  8809
-262+  8809 E5           					push		hl
-263+  880A D5           					push		de
-264+  880B C5           					push		bc
-265+  880C 3E 4F        					ld			a, PLAYER_ATTR
-266+  880E 0D           					dec			c
-267+  880F CD 4E 82     					call		DrawChar
-268+  8812 C1           					pop			bc
-269+  8813 D1           					pop			de
-270+  8814 E1           					pop			hl
-271+  8815
-272+  8815 7B           					ld			a, e
-273+  8816 D6 08        					sub			8
-274+  8818 5F           					ld			e, a
-275+  8819 3E 4F        					ld			a, PLAYER_ATTR
-276+  881B C3 4E 82     					jp			DrawChar
-277+  881E
-278+  881E DD 7E 03     .drawDown:			ld			a, (ix+SPLAYER.time)
-279+  8821              					dup			PLAYER_MOVE_DELAY_BITS
-280+  8821 0F          >					rrca
-281+  8822              					edup
-282+  8822 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-283+  8824 3C           					inc			a
-284+  8825 57           					ld			d, a
-285+  8826 E6 03        					and			3
-286+  8828 C6 05        					add			a, 5
-287+  882A 6F           					ld			l, a
-288+  882B 26 00        					ld			h, 0
-289+  882D 5C           					ld			e, h
-290+  882E
-291+  882E 3E 4F        					ld			a, PLAYER_ATTR
-292+  8830 05           					dec			b
-293+  8831 C3 4E 82     					jp			DrawChar
-294+  8834
-295+  8834 DD 7E 03     .drawUp:			ld			a, (ix+SPLAYER.time)
-296+  8837              					dup			PLAYER_MOVE_DELAY_BITS
-297+  8837 0F          >					rrca
-298+  8838              					edup
-299+  8838 E6 7F        					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
-300+  883A 3C           					inc			a
-301+  883B ED 44        					neg
-302+  883D 57           					ld			d, a
-303+  883E E6 03        					and			3
-304+  8840 C6 05        					add			a, 5
-305+  8842 6F           					ld			l, a
-306+  8843 26 00        					ld			h, 0
-307+  8845 5C           					ld			e, h
-308+  8846
-309+  8846 3E 4F        					ld			a, PLAYER_ATTR
-310+  8848 04           					inc			b
-311+  8849 D5           					push		de
-312+  884A C5           					push		bc
-313+  884B CD 4E 82     					call		DrawChar
-314+  884E C1           					pop			bc
-315+  884F D1           					pop			de
-316+  8850
-317+  8850 3E 08        					ld			a, 8
-318+  8852 82           					add			a, d
-319+  8853 57           					ld			d, a
-320+  8854 C3 0F 82     					jp			DrawEmptyByte
-321+  8857
-322+  8857              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-323+  8857
-324+  8857              					macro 		PLAYERGO state, shift
-325+  8857 ~
-326+  8857 ~            					ld			c, (ix+SPLAYER.x)
-327+  8857 ~            					ld			b, (ix+SPLAYER.y)
-328+  8857 ~            				if state == PLAYER_GO_UP
-329+  8857 ~            					dec			b
-330+  8857 ~            				elseif state == PLAYER_GO_DOWN
-331+  8857 ~            					inc			b
-332+  8857 ~            				elseif state == PLAYER_GO_LEFT
-333+  8857 ~            					dec			c
-334+  8857 ~            				elseif state == PLAYER_GO_RIGHT
-335+  8857 ~            					inc			c
-336+  8857 ~            				endif
-337+  8857 ~            					call		CheckBlocked
-338+  8857 ~            					jr			nz, .tryShift
-339+  8857 ~            					ld			a, state
-340+  8857 ~            .doGo:			if state == PLAYER_GO_DOWN || state == PLAYER_GO_UP
-341+  8857 ~            					ld			(ix+SPLAYER.y), b
-342+  8857 ~            				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
-343+  8857 ~            					ld			(ix+SPLAYER.x), c
-344+  8857 ~            				endif
-345+  8857 ~            					ld			(ix+SPLAYER.state), a
-346+  8857 ~            					ld			(ix+SPLAYER.time), 0
-347+  8857 ~            					ret
-348+  8857 ~            .tryShift:			cp			'O'
-349+  8857 ~            					ret			nz
-350+  8857 ~            				if state == PLAYER_GO_UP
-351+  8857 ~            					dec			b
-352+  8857 ~            				elseif state == PLAYER_GO_DOWN
-353+  8857 ~            					inc			b
-354+  8857 ~            				elseif state == PLAYER_GO_LEFT
-355+  8857 ~            					dec			c
-356+  8857 ~            				elseif state == PLAYER_GO_RIGHT
-357+  8857 ~            					inc			c
-358+  8857 ~            				endif
-359+  8857 ~            					call		CheckBlocked
-360+  8857 ~            					ret			nz
-361+  8857 ~            					ld			(hl), 'O'
-362+  8857 ~            				if state == PLAYER_GO_UP
-363+  8857 ~            					inc			b
-364+  8857 ~            					ld			de, 32
-365+  8857 ~            					add			hl, de
-366+  8857 ~            				elseif state == PLAYER_GO_DOWN
-367+  8857 ~            					dec			b
-368+  8857 ~            					ld			de, -32
-369+  8857 ~            					add			hl, de
-370+  8857 ~            				elseif state == PLAYER_GO_LEFT
-371+  8857 ~            					inc			c
-372+  8857 ~            					inc			hl
-373+  8857 ~            				elseif state == PLAYER_GO_RIGHT
-374+  8857 ~            					dec			c
-375+  8857 ~            					dec			hl
-376+  8857 ~            				endif
-377+  8857 ~            					ld			(hl), ' '
-378+  8857 ~            					ld			a, shift
-379+  8857 ~            					jr			.doGo
-380+  8857 ~
-381+  8857              					endm
-382+  8857
-383+  8857 DD 6E 02     HandlePlayer:		ld			l, (ix+SPLAYER.state)
-384+  885A 26 00        					ld			h, 0
-385+  885C 01 61 88     					ld			bc, .jumpTable
-386+  885F 09           					add			hl, bc
-387+  8860 E9           					jp			(hl)
-388+  8861 C3 90 88     .jumpTable:			jp			.idle
-389+  8864 C3 7C 88     					jp			.move
-390+  8867 C3 7C 88     					jp			.move
-391+  886A C3 7C 88     					jp			.move
-392+  886D C3 7C 88     					jp			.move
-393+  8870 C3 7C 88     					jp			.move
-394+  8873 C3 7C 88     					jp			.move
-395+  8876 C3 7C 88     					jp			.move
-396+  8879 C3 7C 88     					jp			.move
-397+  887C
-398+  887C DD 7E 03     .move:				ld			a, (ix+SPLAYER.time)
-399+  887F 3C           					inc			a
-400+  8880 FE 10        					cp			(8<<PLAYER_MOVE_DELAY_BITS)
-401+  8882 28 04        					jr			z, .moveDone
-402+  8884 DD 77 03     					ld			(ix+SPLAYER.time), a
-403+  8887 C9           					ret
-404+  8888 DD 36 02 00  .moveDone:			ld			(ix+SPLAYER.state), PLAYER_IDLE
-405+  888C DD 36 03 00  					ld			(ix+SPLAYER.time), 0
-406+  8890              					;jr			.idle
-407+  8890
-408+  8890 21 CD 83     .idle:				ld			hl, Input.left
-409+  8893 AF           					xor			a
-410+  8894 BE           					cp			(hl)
-411+  8895 28 0E        					jr			z, .goLeft
-412+  8897
-413+  8897 23           					inc			hl
-414+  8898 BE           					cp			(hl)
-415+  8899 28 35        					jr			z, .goRight
-416+  889B
-417+  889B 23           					inc			hl
-418+  889C BE           					cp			(hl)
-419+  889D 28 5C        					jr			z, .goUp
-420+  889F
-421+  889F 23           					inc			hl
-422+  88A0 BE           					cp			(hl)
-423+  88A1 CA 29 89     					jp			z, .goDown
-424+  88A4
-425+  88A4 C9           					ret
-426+  88A5
-427+  88A5              .goLeft:			PLAYERGO	PLAYER_GO_LEFT, PLAYER_SHIFT_LEFT
-427+  88A5             >
-427+  88A5 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
-427+  88A8 DD 46 01    >					ld			b, (ix+SPLAYER.y)
-427+  88AB             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
-427+  88AB ~           >					dec			b
-427+  88AB             >				elseif state == PLAYER_GO_DOWN
-427+  88AB ~           >					inc			b
-427+  88AB             >				elseif state == PLAYER_GO_LEFT
-427+  88AB 0D          >					dec			c
-427+  88AC             >				elseif state == PLAYER_GO_RIGHT
-427+  88AC ~           >					inc			c
-427+  88AC             >				endif
-427+  88AC CD B2 86    >					call		CheckBlocked
-427+  88AF 20 0D       >					jr			nz, .tryShift
-427+  88B1 3E 03       >					ld			a, PLAYER_GO_LEFT
-427+  88B3             >.doGo:			if PLAYER_GO_LEFT == PLAYER_GO_DOWN || PLAYER_GO_LEFT == PLAYER_GO_UP
-427+  88B3 ~           >					ld			(ix+SPLAYER.y), b
-427+  88B3             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
-427+  88B3 DD 71 00    >					ld			(ix+SPLAYER.x), c
-427+  88B6             >				endif
-427+  88B6 DD 77 02    >					ld			(ix+SPLAYER.state), a
-427+  88B9 DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
-427+  88BD C9          >					ret
-427+  88BE FE 4F       >.tryShift:			cp			'O'
-427+  88C0 C0          >					ret			nz
-427+  88C1             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
-427+  88C1 ~           >					dec			b
-427+  88C1             >				elseif state == PLAYER_GO_DOWN
-427+  88C1 ~           >					inc			b
-427+  88C1             >				elseif state == PLAYER_GO_LEFT
-427+  88C1 0D          >					dec			c
-427+  88C2             >				elseif state == PLAYER_GO_RIGHT
-427+  88C2 ~           >					inc			c
-427+  88C2             >				endif
-427+  88C2 CD B2 86    >					call		CheckBlocked
-427+  88C5 C0          >					ret			nz
-427+  88C6 36 4F       >					ld			(hl), 'O'
-427+  88C8             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
-427+  88C8 ~           >					inc			b
-427+  88C8 ~           >					ld			de, 32
-427+  88C8 ~           >					add			hl, de
-427+  88C8             >				elseif state == PLAYER_GO_DOWN
-427+  88C8 ~           >					dec			b
-427+  88C8 ~           >					ld			de, -32
-427+  88C8 ~           >					add			hl, de
-427+  88C8             >				elseif state == PLAYER_GO_LEFT
-427+  88C8 0C          >					inc			c
-427+  88C9 23          >					inc			hl
-427+  88CA             >				elseif state == PLAYER_GO_RIGHT
-427+  88CA ~           >					dec			c
-427+  88CA ~           >					dec			hl
-427+  88CA             >				endif
-427+  88CA 36 20       >					ld			(hl), ' '
-427+  88CC 3E 0F       >					ld			a, PLAYER_SHIFT_LEFT
-427+  88CE 18 E3       >					jr			.doGo
-427+  88D0             >
-428+  88D0              .goRight:			PLAYERGO	PLAYER_GO_RIGHT, PLAYER_SHIFT_RIGHT
-428+  88D0             >
-428+  88D0 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
-428+  88D3 DD 46 01    >					ld			b, (ix+SPLAYER.y)
-428+  88D6             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
-428+  88D6 ~           >					dec			b
-428+  88D6             >				elseif state == PLAYER_GO_DOWN
-428+  88D6 ~           >					inc			b
-428+  88D6             >				elseif state == PLAYER_GO_LEFT
-428+  88D6 ~           >					dec			c
-428+  88D6             >				elseif state == PLAYER_GO_RIGHT
-428+  88D6 0C          >					inc			c
-428+  88D7             >				endif
-428+  88D7 CD B2 86    >					call		CheckBlocked
-428+  88DA 20 0D       >					jr			nz, .tryShift
-428+  88DC 3E 06       >					ld			a, PLAYER_GO_RIGHT
-428+  88DE             >.doGo:			if PLAYER_GO_RIGHT == PLAYER_GO_DOWN || PLAYER_GO_RIGHT == PLAYER_GO_UP
-428+  88DE ~           >					ld			(ix+SPLAYER.y), b
-428+  88DE             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
-428+  88DE DD 71 00    >					ld			(ix+SPLAYER.x), c
-428+  88E1             >				endif
-428+  88E1 DD 77 02    >					ld			(ix+SPLAYER.state), a
-428+  88E4 DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
-428+  88E8 C9          >					ret
-428+  88E9 FE 4F       >.tryShift:			cp			'O'
-428+  88EB C0          >					ret			nz
-428+  88EC             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
-428+  88EC ~           >					dec			b
-428+  88EC             >				elseif state == PLAYER_GO_DOWN
-428+  88EC ~           >					inc			b
-428+  88EC             >				elseif state == PLAYER_GO_LEFT
-428+  88EC ~           >					dec			c
-428+  88EC             >				elseif state == PLAYER_GO_RIGHT
-428+  88EC 0C          >					inc			c
-428+  88ED             >				endif
-428+  88ED CD B2 86    >					call		CheckBlocked
-428+  88F0 C0          >					ret			nz
-428+  88F1 36 4F       >					ld			(hl), 'O'
-428+  88F3             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
-428+  88F3 ~           >					inc			b
-428+  88F3 ~           >					ld			de, 32
-428+  88F3 ~           >					add			hl, de
-428+  88F3             >				elseif state == PLAYER_GO_DOWN
-428+  88F3 ~           >					dec			b
-428+  88F3 ~           >					ld			de, -32
-428+  88F3 ~           >					add			hl, de
-428+  88F3             >				elseif state == PLAYER_GO_LEFT
-428+  88F3 ~           >					inc			c
-428+  88F3 ~           >					inc			hl
-428+  88F3             >				elseif state == PLAYER_GO_RIGHT
-428+  88F3 0D          >					dec			c
-428+  88F4 2B          >					dec			hl
-428+  88F5             >				endif
-428+  88F5 36 20       >					ld			(hl), ' '
-428+  88F7 3E 12       >					ld			a, PLAYER_SHIFT_RIGHT
-428+  88F9 18 E3       >					jr			.doGo
-428+  88FB             >
-429+  88FB              .goUp:				PLAYERGO	PLAYER_GO_UP, PLAYER_SHIFT_UP
-429+  88FB             >
-429+  88FB DD 4E 00    >					ld			c, (ix+SPLAYER.x)
-429+  88FE DD 46 01    >					ld			b, (ix+SPLAYER.y)
-429+  8901             >				if PLAYER_GO_UP == PLAYER_GO_UP
-429+  8901 05          >					dec			b
-429+  8902             >				elseif state == PLAYER_GO_DOWN
-429+  8902 ~           >					inc			b
-429+  8902             >				elseif state == PLAYER_GO_LEFT
-429+  8902 ~           >					dec			c
-429+  8902             >				elseif state == PLAYER_GO_RIGHT
-429+  8902 ~           >					inc			c
-429+  8902             >				endif
-429+  8902 CD B2 86    >					call		CheckBlocked
-429+  8905 20 0D       >					jr			nz, .tryShift
-429+  8907 3E 09       >					ld			a, PLAYER_GO_UP
-429+  8909             >.doGo:			if PLAYER_GO_UP == PLAYER_GO_DOWN || PLAYER_GO_UP == PLAYER_GO_UP
-429+  8909 DD 70 01    >					ld			(ix+SPLAYER.y), b
-429+  890C             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
-429+  890C ~           >					ld			(ix+SPLAYER.x), c
-429+  890C             >				endif
-429+  890C DD 77 02    >					ld			(ix+SPLAYER.state), a
-429+  890F DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
-429+  8913 C9          >					ret
-429+  8914 FE 4F       >.tryShift:			cp			'O'
-429+  8916 C0          >					ret			nz
-429+  8917             >				if PLAYER_GO_UP == PLAYER_GO_UP
-429+  8917 05          >					dec			b
-429+  8918             >				elseif state == PLAYER_GO_DOWN
-429+  8918 ~           >					inc			b
-429+  8918             >				elseif state == PLAYER_GO_LEFT
-429+  8918 ~           >					dec			c
-429+  8918             >				elseif state == PLAYER_GO_RIGHT
-429+  8918 ~           >					inc			c
-429+  8918             >				endif
-429+  8918 CD B2 86    >					call		CheckBlocked
-429+  891B C0          >					ret			nz
-429+  891C 36 4F       >					ld			(hl), 'O'
-429+  891E             >				if PLAYER_GO_UP == PLAYER_GO_UP
-429+  891E 04          >					inc			b
-429+  891F 11 20 00    >					ld			de, 32
-429+  8922 19          >					add			hl, de
-429+  8923             >				elseif state == PLAYER_GO_DOWN
-429+  8923 ~           >					dec			b
-429+  8923 ~           >					ld			de, -32
-429+  8923 ~           >					add			hl, de
-429+  8923             >				elseif state == PLAYER_GO_LEFT
-429+  8923 ~           >					inc			c
-429+  8923 ~           >					inc			hl
-429+  8923             >				elseif state == PLAYER_GO_RIGHT
-429+  8923 ~           >					dec			c
-429+  8923 ~           >					dec			hl
-429+  8923             >				endif
-429+  8923 36 20       >					ld			(hl), ' '
-429+  8925 3E 15       >					ld			a, PLAYER_SHIFT_UP
-429+  8927 18 E0       >					jr			.doGo
-429+  8929             >
-430+  8929              .goDown:			PLAYERGO	PLAYER_GO_DOWN, PLAYER_SHIFT_DOWN
-430+  8929             >
-430+  8929 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
-430+  892C DD 46 01    >					ld			b, (ix+SPLAYER.y)
-430+  892F             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
-430+  892F ~           >					dec			b
-430+  892F             >				elseif state == PLAYER_GO_DOWN
-430+  892F 04          >					inc			b
-430+  8930             >				elseif state == PLAYER_GO_LEFT
-430+  8930 ~           >					dec			c
-430+  8930             >				elseif state == PLAYER_GO_RIGHT
-430+  8930 ~           >					inc			c
-430+  8930             >				endif
-430+  8930 CD B2 86    >					call		CheckBlocked
-430+  8933 20 0D       >					jr			nz, .tryShift
-430+  8935 3E 0C       >					ld			a, PLAYER_GO_DOWN
-430+  8937             >.doGo:			if PLAYER_GO_DOWN == PLAYER_GO_DOWN || PLAYER_GO_DOWN == PLAYER_GO_UP
-430+  8937 DD 70 01    >					ld			(ix+SPLAYER.y), b
-430+  893A             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
-430+  893A ~           >					ld			(ix+SPLAYER.x), c
-430+  893A             >				endif
-430+  893A DD 77 02    >					ld			(ix+SPLAYER.state), a
-430+  893D DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
-430+  8941 C9          >					ret
-430+  8942 FE 4F       >.tryShift:			cp			'O'
-430+  8944 C0          >					ret			nz
-430+  8945             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
-430+  8945 ~           >					dec			b
-430+  8945             >				elseif state == PLAYER_GO_DOWN
-430+  8945 04          >					inc			b
-430+  8946             >				elseif state == PLAYER_GO_LEFT
-430+  8946 ~           >					dec			c
-430+  8946             >				elseif state == PLAYER_GO_RIGHT
-430+  8946 ~           >					inc			c
-430+  8946             >				endif
-430+  8946 CD B2 86    >					call		CheckBlocked
-430+  8949 C0          >					ret			nz
-430+  894A 36 4F       >					ld			(hl), 'O'
-430+  894C             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
-430+  894C ~           >					inc			b
-430+  894C ~           >					ld			de, 32
-430+  894C ~           >					add			hl, de
-430+  894C             >				elseif state == PLAYER_GO_DOWN
-430+  894C 05          >					dec			b
-430+  894D 11 E0 FF    >					ld			de, -32
-430+  8950 19          >					add			hl, de
-430+  8951             >				elseif state == PLAYER_GO_LEFT
-430+  8951 ~           >					inc			c
-430+  8951 ~           >					inc			hl
-430+  8951             >				elseif state == PLAYER_GO_RIGHT
-430+  8951 ~           >					dec			c
-430+  8951 ~           >					dec			hl
-430+  8951             >				endif
-430+  8951 36 20       >					ld			(hl), ' '
-430+  8953 3E 18       >					ld			a, PLAYER_SHIFT_DOWN
-430+  8955 18 E0       >					jr			.doGo
-430+  8957             >
-431+  8957
+ 31+  86D2              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 32+  86D2
+ 33+  86D2              					macro		DRAWHORZ left, shift
+ 34+  86D2 ~
+ 35+  86D2 ~            					ld			a, (ix+SPLAYER.time)
+ 36+  86D2 ~            					dup			PLAYER_MOVE_DELAY_BITS
+ 37+  86D2 ~            					rrca
+ 38+  86D2 ~            					edup
+ 39+  86D2 ~            					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+ 40+  86D2 ~            					inc			a
+ 41+  86D2 ~            				if left
+ 42+  86D2 ~            					neg
+ 43+  86D2 ~            				endif
+ 44+  86D2 ~            					ld			e, a
+ 45+  86D2 ~
+ 46+  86D2 ~            				if shift
+ 47+  86D2 ~            					and			3
+ 48+  86D2 ~            					ld			h, 0x01
+ 49+  86D2 ~            					ld			l, a
+ 50+  86D2 ~            					ld			d, 0
+ 51+  86D2 ~
+ 52+  86D2 ~            					push		af
+ 53+  86D2 ~
+ 54+  86D2 ~            					push		bc
+ 55+  86D2 ~            					push		de
+ 56+  86D2 ~            					push		hl
+ 57+  86D2 ~            					ld			a, SPHERE_ATTR
+ 58+  86D2 ~            					call		DrawChar
+ 59+  86D2 ~            					pop			hl
+ 60+  86D2 ~            					pop			de
+ 61+  86D2 ~            					pop			bc
+ 62+  86D2 ~
+ 63+  86D2 ~            					push		bc
+ 64+  86D2 ~            					push		de
+ 65+  86D2 ~            				if left
+ 66+  86D2 ~            					dec			c
+ 67+  86D2 ~            					ld			a, 8
+ 68+  86D2 ~            					add			a, e
+ 69+  86D2 ~            				else
+ 70+  86D2 ~            					inc			c
+ 71+  86D2 ~            					ld			a, e
+ 72+  86D2 ~            					sub			8
+ 73+  86D2 ~            				endif
+ 74+  86D2 ~            					ld			e, a
+ 75+  86D2 ~            					ld			a, SPHERE_ATTR
+ 76+  86D2 ~            					call		DrawChar
+ 77+  86D2 ~            					pop			de
+ 78+  86D2 ~            					pop			bc
+ 79+  86D2 ~
+ 80+  86D2 ~            					pop			af
+ 81+  86D2 ~            				endif ; shift
+ 82+  86D2 ~
+ 83+  86D2 ~            					rrca
+ 84+  86D2 ~            					and			1
+ 85+  86D2 ~            				if left
+ 86+  86D2 ~            					inc			a
+ 87+  86D2 ~            				else
+ 88+  86D2 ~            					add			a, 3
+ 89+  86D2 ~            				endif
+ 90+  86D2 ~            					ld			l, a
+ 91+  86D2 ~            					ld			h, 0
+ 92+  86D2 ~            					ld			d, h
+ 93+  86D2 ~
+ 94+  86D2 ~            					push		hl
+ 95+  86D2 ~            					push		de
+ 96+  86D2 ~            					push		bc
+ 97+  86D2 ~            					ld			a, PLAYER_ATTR
+ 98+  86D2 ~            				if left
+ 99+  86D2 ~            					inc			c
+100+  86D2 ~            				else
+101+  86D2 ~            					dec			c
+102+  86D2 ~            				endif
+103+  86D2 ~            					call		DrawChar
+104+  86D2 ~            					pop			bc
+105+  86D2 ~            					pop			de
+106+  86D2 ~            					pop			hl
+107+  86D2 ~
+108+  86D2 ~            				if shift
+109+  86D2 ~            					ld			a, DRAW_OR
+110+  86D2 ~            					call		SetDrawCharMode
+111+  86D2 ~            				endif
+112+  86D2 ~
+113+  86D2 ~            					ld			a, e
+114+  86D2 ~            				if left
+115+  86D2 ~            					add			a, 8
+116+  86D2 ~            				else
+117+  86D2 ~            					sub			8
+118+  86D2 ~            				endif
+119+  86D2 ~            					ld			e, a
+120+  86D2 ~            					ld			a, PLAYER_ATTR
+121+  86D2 ~            				if shift
+122+  86D2 ~            					call		DrawChar
+123+  86D2 ~            					ld			a, DRAW_REPLACE
+124+  86D2 ~            					jp			SetDrawCharMode
+125+  86D2 ~            				else
+126+  86D2 ~            					jp			DrawChar
+127+  86D2 ~            				endif
+128+  86D2 ~
+129+  86D2              					endm
+130+  86D2
+131+  86D2              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+132+  86D2
+133+  86D2              					macro		DRAWVERT up, shift
+134+  86D2 ~
+135+  86D2 ~            					ld			a, (ix+SPLAYER.time)
+136+  86D2 ~            					dup			PLAYER_MOVE_DELAY_BITS
+137+  86D2 ~            					rrca
+138+  86D2 ~            					edup
+139+  86D2 ~            					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+140+  86D2 ~            					inc			a
+141+  86D2 ~            				if up
+142+  86D2 ~            					neg
+143+  86D2 ~            				endif
+144+  86D2 ~            					ld			d, a
+145+  86D2 ~            					ld			e, 0
+146+  86D2 ~
+147+  86D2 ~            					and			3
+148+  86D2 ~
+149+  86D2 ~            				if shift
+150+  86D2 ~            					push		af
+151+  86D2 ~            					push		de
+152+  86D2 ~            					push		bc
+153+  86D2 ~            					ld			h, 1
+154+  86D2 ~            					ld			l, a
+155+  86D2 ~            					ld			a, SPHERE_ATTR
+156+  86D2 ~            					call		DrawChar
+157+  86D2 ~            					pop			bc
+158+  86D2 ~            					pop			de
+159+  86D2 ~            					pop			af
+160+  86D2 ~            			 	endif ; shift
+161+  86D2 ~
+162+  86D2 ~            					add			a, 5
+163+  86D2 ~            					ld			l, a
+164+  86D2 ~            					ld			h, e
+165+  86D2 ~
+166+  86D2 ~            					ld			a, PLAYER_ATTR
+167+  86D2 ~            				if up
+168+  86D2 ~            					inc			b
+169+  86D2 ~            					push		de
+170+  86D2 ~            					push		bc
+171+  86D2 ~            					call		DrawChar
+172+  86D2 ~            					pop			bc
+173+  86D2 ~            					pop			de
+174+  86D2 ~
+175+  86D2 ~            					ld			a, 8
+176+  86D2 ~            					add			a, d
+177+  86D2 ~            					ld			d, a
+178+  86D2 ~            					jp			DrawEmptyByte
+179+  86D2 ~            				else
+180+  86D2 ~            					dec			b
+181+  86D2 ~            					jp			DrawChar
+182+  86D2 ~            				endif
+183+  86D2 ~
+184+  86D2              					endm
+185+  86D2
+186+  86D2              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+187+  86D2
+188+  86D2 DD 4E 00     DrawPlayer:			ld			c, (ix+SPLAYER.x)
+189+  86D5 DD 46 01     					ld			b, (ix+SPLAYER.y)
+190+  86D8
+191+  86D8 DD 6E 02     					ld			l, (ix+SPLAYER.state)
+192+  86DB 26 00        					ld			h, 0
+193+  86DD 11 E2 86     					ld			de, .jumpTable
+194+  86E0 19           					add			hl, de
+195+  86E1 E9           					jp			(hl)
+196+  86E2 C3 FD 86     .jumpTable:			jp			.drawIdle
+197+  86E5 C3 27 88     					jp			.drawLeft
+198+  86E8 C3 01 88     					jp			.drawRight
+199+  86EB C3 64 88     					jp			.drawUp
+200+  86EE C3 4E 88     					jp			.drawDown
+201+  86F1 C3 07 87     					jp			.drawShiftLeft
+202+  86F4 C3 5A 87     					jp			.drawShiftRight
+203+  86F7 C3 AC 87     					jp			.drawShiftUp
+204+  86FA C3 DD 87     					jp			.drawShiftDown
+205+  86FD
+206+  86FD 21 00 00     .drawIdle:			ld			hl, 0x0000
+207+  8700 54           					ld			d, h
+208+  8701 5C           					ld			e, h
+209+  8702 3E 4F        					ld			a, PLAYER_ATTR
+210+  8704 C3 4E 82     					jp			DrawChar
+211+  8707
+212+  8707              .drawShiftLeft:		DRAWHORZ 	1, 1
+212+  8707             >
+212+  8707 DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+212+  870A             >					dup			PLAYER_MOVE_DELAY_BITS
+212+  870A 0F          >					rrca
+212+  870B             >					edup
+212+  870B E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+212+  870D 3C          >					inc			a
+212+  870E             >				if 1
+212+  870E ED 44       >					neg
+212+  8710             >				endif
+212+  8710 5F          >					ld			e, a
+212+  8711             >
+212+  8711             >				if 1
+212+  8711 E6 03       >					and			3
+212+  8713 26 01       >					ld			h, 0x01
+212+  8715 6F          >					ld			l, a
+212+  8716 16 00       >					ld			d, 0
+212+  8718             >
+212+  8718 F5          >					push		af
+212+  8719             >
+212+  8719 C5          >					push		bc
+212+  871A D5          >					push		de
+212+  871B E5          >					push		hl
+212+  871C 3E 4E       >					ld			a, SPHERE_ATTR
+212+  871E CD 4E 82    >					call		DrawChar
+212+  8721 E1          >					pop			hl
+212+  8722 D1          >					pop			de
+212+  8723 C1          >					pop			bc
+212+  8724             >
+212+  8724 C5          >					push		bc
+212+  8725 D5          >					push		de
+212+  8726             >				if 1
+212+  8726 0D          >					dec			c
+212+  8727 3E 08       >					ld			a, 8
+212+  8729 83          >					add			a, e
+212+  872A             >				else
+212+  872A ~           >					inc			c
+212+  872A ~           >					ld			a, e
+212+  872A ~           >					sub			8
+212+  872A             >				endif
+212+  872A 5F          >					ld			e, a
+212+  872B 3E 4E       >					ld			a, SPHERE_ATTR
+212+  872D CD 4E 82    >					call		DrawChar
+212+  8730 D1          >					pop			de
+212+  8731 C1          >					pop			bc
+212+  8732             >
+212+  8732 F1          >					pop			af
+212+  8733             >				endif ; shift
+212+  8733             >
+212+  8733 0F          >					rrca
+212+  8734 E6 01       >					and			1
+212+  8736             >				if 1
+212+  8736 3C          >					inc			a
+212+  8737             >				else
+212+  8737 ~           >					add			a, 3
+212+  8737             >				endif
+212+  8737 6F          >					ld			l, a
+212+  8738 26 00       >					ld			h, 0
+212+  873A 54          >					ld			d, h
+212+  873B             >
+212+  873B E5          >					push		hl
+212+  873C D5          >					push		de
+212+  873D C5          >					push		bc
+212+  873E 3E 4F       >					ld			a, PLAYER_ATTR
+212+  8740             >				if 1
+212+  8740 0C          >					inc			c
+212+  8741             >				else
+212+  8741 ~           >					dec			c
+212+  8741             >				endif
+212+  8741 CD 4E 82    >					call		DrawChar
+212+  8744 C1          >					pop			bc
+212+  8745 D1          >					pop			de
+212+  8746 E1          >					pop			hl
+212+  8747             >
+212+  8747             >				if 1
+212+  8747 3E B6       >					ld			a, DRAW_OR
+212+  8749 CD 1D 82    >					call		SetDrawCharMode
+212+  874C             >				endif
+212+  874C             >
+212+  874C 7B          >					ld			a, e
+212+  874D             >				if 1
+212+  874D C6 08       >					add			a, 8
+212+  874F             >				else
+212+  874F ~           >					sub			8
+212+  874F             >				endif
+212+  874F 5F          >					ld			e, a
+212+  8750 3E 4F       >					ld			a, PLAYER_ATTR
+212+  8752             >				if 1
+212+  8752 CD 4E 82    >					call		DrawChar
+212+  8755 3E 00       >					ld			a, DRAW_REPLACE
+212+  8757 C3 1D 82    >					jp			SetDrawCharMode
+212+  875A             >				else
+212+  875A ~           >					jp			DrawChar
+212+  875A             >				endif
+212+  875A             >
+213+  875A              .drawShiftRight:	DRAWHORZ 	0, 1
+213+  875A             >
+213+  875A DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+213+  875D             >					dup			PLAYER_MOVE_DELAY_BITS
+213+  875D 0F          >					rrca
+213+  875E             >					edup
+213+  875E E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+213+  8760 3C          >					inc			a
+213+  8761             >				if 0
+213+  8761 ~           >					neg
+213+  8761             >				endif
+213+  8761 5F          >					ld			e, a
+213+  8762             >
+213+  8762             >				if 1
+213+  8762 E6 03       >					and			3
+213+  8764 26 01       >					ld			h, 0x01
+213+  8766 6F          >					ld			l, a
+213+  8767 16 00       >					ld			d, 0
+213+  8769             >
+213+  8769 F5          >					push		af
+213+  876A             >
+213+  876A C5          >					push		bc
+213+  876B D5          >					push		de
+213+  876C E5          >					push		hl
+213+  876D 3E 4E       >					ld			a, SPHERE_ATTR
+213+  876F CD 4E 82    >					call		DrawChar
+213+  8772 E1          >					pop			hl
+213+  8773 D1          >					pop			de
+213+  8774 C1          >					pop			bc
+213+  8775             >
+213+  8775 C5          >					push		bc
+213+  8776 D5          >					push		de
+213+  8777             >				if 0
+213+  8777 ~           >					dec			c
+213+  8777 ~           >					ld			a, 8
+213+  8777 ~           >					add			a, e
+213+  8777             >				else
+213+  8777 0C          >					inc			c
+213+  8778 7B          >					ld			a, e
+213+  8779 D6 08       >					sub			8
+213+  877B             >				endif
+213+  877B 5F          >					ld			e, a
+213+  877C 3E 4E       >					ld			a, SPHERE_ATTR
+213+  877E CD 4E 82    >					call		DrawChar
+213+  8781 D1          >					pop			de
+213+  8782 C1          >					pop			bc
+213+  8783             >
+213+  8783 F1          >					pop			af
+213+  8784             >				endif ; shift
+213+  8784             >
+213+  8784 0F          >					rrca
+213+  8785 E6 01       >					and			1
+213+  8787             >				if 0
+213+  8787 ~           >					inc			a
+213+  8787             >				else
+213+  8787 C6 03       >					add			a, 3
+213+  8789             >				endif
+213+  8789 6F          >					ld			l, a
+213+  878A 26 00       >					ld			h, 0
+213+  878C 54          >					ld			d, h
+213+  878D             >
+213+  878D E5          >					push		hl
+213+  878E D5          >					push		de
+213+  878F C5          >					push		bc
+213+  8790 3E 4F       >					ld			a, PLAYER_ATTR
+213+  8792             >				if 0
+213+  8792 ~           >					inc			c
+213+  8792             >				else
+213+  8792 0D          >					dec			c
+213+  8793             >				endif
+213+  8793 CD 4E 82    >					call		DrawChar
+213+  8796 C1          >					pop			bc
+213+  8797 D1          >					pop			de
+213+  8798 E1          >					pop			hl
+213+  8799             >
+213+  8799             >				if 1
+213+  8799 3E B6       >					ld			a, DRAW_OR
+213+  879B CD 1D 82    >					call		SetDrawCharMode
+213+  879E             >				endif
+213+  879E             >
+213+  879E 7B          >					ld			a, e
+213+  879F             >				if 0
+213+  879F ~           >					add			a, 8
+213+  879F             >				else
+213+  879F D6 08       >					sub			8
+213+  87A1             >				endif
+213+  87A1 5F          >					ld			e, a
+213+  87A2 3E 4F       >					ld			a, PLAYER_ATTR
+213+  87A4             >				if 1
+213+  87A4 CD 4E 82    >					call		DrawChar
+213+  87A7 3E 00       >					ld			a, DRAW_REPLACE
+213+  87A9 C3 1D 82    >					jp			SetDrawCharMode
+213+  87AC             >				else
+213+  87AC ~           >					jp			DrawChar
+213+  87AC             >				endif
+213+  87AC             >
+214+  87AC              .drawShiftUp:		DRAWVERT	1, 1
+214+  87AC             >
+214+  87AC DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+214+  87AF             >					dup			PLAYER_MOVE_DELAY_BITS
+214+  87AF 0F          >					rrca
+214+  87B0             >					edup
+214+  87B0 E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+214+  87B2 3C          >					inc			a
+214+  87B3             >				if 1
+214+  87B3 ED 44       >					neg
+214+  87B5             >				endif
+214+  87B5 57          >					ld			d, a
+214+  87B6 1E 00       >					ld			e, 0
+214+  87B8             >
+214+  87B8 E6 03       >					and			3
+214+  87BA             >
+214+  87BA             >				if 1
+214+  87BA F5          >					push		af
+214+  87BB D5          >					push		de
+214+  87BC C5          >					push		bc
+214+  87BD 26 01       >					ld			h, 1
+214+  87BF 6F          >					ld			l, a
+214+  87C0 3E 4E       >					ld			a, SPHERE_ATTR
+214+  87C2 CD 4E 82    >					call		DrawChar
+214+  87C5 C1          >					pop			bc
+214+  87C6 D1          >					pop			de
+214+  87C7 F1          >					pop			af
+214+  87C8             >			 	endif ; shift
+214+  87C8             >
+214+  87C8 C6 05       >					add			a, 5
+214+  87CA 6F          >					ld			l, a
+214+  87CB 63          >					ld			h, e
+214+  87CC             >
+214+  87CC 3E 4F       >					ld			a, PLAYER_ATTR
+214+  87CE             >				if 1
+214+  87CE 04          >					inc			b
+214+  87CF D5          >					push		de
+214+  87D0 C5          >					push		bc
+214+  87D1 CD 4E 82    >					call		DrawChar
+214+  87D4 C1          >					pop			bc
+214+  87D5 D1          >					pop			de
+214+  87D6             >
+214+  87D6 3E 08       >					ld			a, 8
+214+  87D8 82          >					add			a, d
+214+  87D9 57          >					ld			d, a
+214+  87DA C3 0F 82    >					jp			DrawEmptyByte
+214+  87DD             >				else
+214+  87DD ~           >					dec			b
+214+  87DD ~           >					jp			DrawChar
+214+  87DD             >				endif
+214+  87DD             >
+215+  87DD              .drawShiftDown:		DRAWVERT	0, 1
+215+  87DD             >
+215+  87DD DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+215+  87E0             >					dup			PLAYER_MOVE_DELAY_BITS
+215+  87E0 0F          >					rrca
+215+  87E1             >					edup
+215+  87E1 E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+215+  87E3 3C          >					inc			a
+215+  87E4             >				if 0
+215+  87E4 ~           >					neg
+215+  87E4             >				endif
+215+  87E4 57          >					ld			d, a
+215+  87E5 1E 00       >					ld			e, 0
+215+  87E7             >
+215+  87E7 E6 03       >					and			3
+215+  87E9             >
+215+  87E9             >				if 1
+215+  87E9 F5          >					push		af
+215+  87EA D5          >					push		de
+215+  87EB C5          >					push		bc
+215+  87EC 26 01       >					ld			h, 1
+215+  87EE 6F          >					ld			l, a
+215+  87EF 3E 4E       >					ld			a, SPHERE_ATTR
+215+  87F1 CD 4E 82    >					call		DrawChar
+215+  87F4 C1          >					pop			bc
+215+  87F5 D1          >					pop			de
+215+  87F6 F1          >					pop			af
+215+  87F7             >			 	endif ; shift
+215+  87F7             >
+215+  87F7 C6 05       >					add			a, 5
+215+  87F9 6F          >					ld			l, a
+215+  87FA 63          >					ld			h, e
+215+  87FB             >
+215+  87FB 3E 4F       >					ld			a, PLAYER_ATTR
+215+  87FD             >				if 0
+215+  87FD ~           >					inc			b
+215+  87FD ~           >					push		de
+215+  87FD ~           >					push		bc
+215+  87FD ~           >					call		DrawChar
+215+  87FD ~           >					pop			bc
+215+  87FD ~           >					pop			de
+215+  87FD ~           >
+215+  87FD ~           >					ld			a, 8
+215+  87FD ~           >					add			a, d
+215+  87FD ~           >					ld			d, a
+215+  87FD ~           >					jp			DrawEmptyByte
+215+  87FD             >				else
+215+  87FD 05          >					dec			b
+215+  87FE C3 4E 82    >					jp			DrawChar
+215+  8801             >				endif
+215+  8801             >
+216+  8801
+217+  8801              .drawRight:			DRAWHORZ	0, 0
+217+  8801             >
+217+  8801 DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+217+  8804             >					dup			PLAYER_MOVE_DELAY_BITS
+217+  8804 0F          >					rrca
+217+  8805             >					edup
+217+  8805 E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+217+  8807 3C          >					inc			a
+217+  8808             >				if 0
+217+  8808 ~           >					neg
+217+  8808             >				endif
+217+  8808 5F          >					ld			e, a
+217+  8809             >
+217+  8809             >				if 0
+217+  8809 ~           >					and			3
+217+  8809 ~           >					ld			h, 0x01
+217+  8809 ~           >					ld			l, a
+217+  8809 ~           >					ld			d, 0
+217+  8809 ~           >
+217+  8809 ~           >					push		af
+217+  8809 ~           >
+217+  8809 ~           >					push		bc
+217+  8809 ~           >					push		de
+217+  8809 ~           >					push		hl
+217+  8809 ~           >					ld			a, SPHERE_ATTR
+217+  8809 ~           >					call		DrawChar
+217+  8809 ~           >					pop			hl
+217+  8809 ~           >					pop			de
+217+  8809 ~           >					pop			bc
+217+  8809 ~           >
+217+  8809 ~           >					push		bc
+217+  8809 ~           >					push		de
+217+  8809 ~           >				if left
+217+  8809 ~           >					dec			c
+217+  8809 ~           >					ld			a, 8
+217+  8809 ~           >					add			a, e
+217+  8809 ~           >				else
+217+  8809 ~           >					inc			c
+217+  8809 ~           >					ld			a, e
+217+  8809 ~           >					sub			8
+217+  8809 ~           >				endif
+217+  8809 ~           >					ld			e, a
+217+  8809 ~           >					ld			a, SPHERE_ATTR
+217+  8809 ~           >					call		DrawChar
+217+  8809 ~           >					pop			de
+217+  8809 ~           >					pop			bc
+217+  8809 ~           >
+217+  8809 ~           >					pop			af
+217+  8809             >				endif ; shift
+217+  8809             >
+217+  8809 0F          >					rrca
+217+  880A E6 01       >					and			1
+217+  880C             >				if 0
+217+  880C ~           >					inc			a
+217+  880C             >				else
+217+  880C C6 03       >					add			a, 3
+217+  880E             >				endif
+217+  880E 6F          >					ld			l, a
+217+  880F 26 00       >					ld			h, 0
+217+  8811 54          >					ld			d, h
+217+  8812             >
+217+  8812 E5          >					push		hl
+217+  8813 D5          >					push		de
+217+  8814 C5          >					push		bc
+217+  8815 3E 4F       >					ld			a, PLAYER_ATTR
+217+  8817             >				if 0
+217+  8817 ~           >					inc			c
+217+  8817             >				else
+217+  8817 0D          >					dec			c
+217+  8818             >				endif
+217+  8818 CD 4E 82    >					call		DrawChar
+217+  881B C1          >					pop			bc
+217+  881C D1          >					pop			de
+217+  881D E1          >					pop			hl
+217+  881E             >
+217+  881E             >				if 0
+217+  881E ~           >					ld			a, DRAW_OR
+217+  881E ~           >					call		SetDrawCharMode
+217+  881E             >				endif
+217+  881E             >
+217+  881E 7B          >					ld			a, e
+217+  881F             >				if 0
+217+  881F ~           >					add			a, 8
+217+  881F             >				else
+217+  881F D6 08       >					sub			8
+217+  8821             >				endif
+217+  8821 5F          >					ld			e, a
+217+  8822 3E 4F       >					ld			a, PLAYER_ATTR
+217+  8824             >				if 0
+217+  8824 ~           >					call		DrawChar
+217+  8824 ~           >					ld			a, DRAW_REPLACE
+217+  8824 ~           >					jp			SetDrawCharMode
+217+  8824             >				else
+217+  8824 C3 4E 82    >					jp			DrawChar
+217+  8827             >				endif
+217+  8827             >
+218+  8827              .drawLeft:			DRAWHORZ	1, 0
+218+  8827             >
+218+  8827 DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+218+  882A             >					dup			PLAYER_MOVE_DELAY_BITS
+218+  882A 0F          >					rrca
+218+  882B             >					edup
+218+  882B E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+218+  882D 3C          >					inc			a
+218+  882E             >				if 1
+218+  882E ED 44       >					neg
+218+  8830             >				endif
+218+  8830 5F          >					ld			e, a
+218+  8831             >
+218+  8831             >				if 0
+218+  8831 ~           >					and			3
+218+  8831 ~           >					ld			h, 0x01
+218+  8831 ~           >					ld			l, a
+218+  8831 ~           >					ld			d, 0
+218+  8831 ~           >
+218+  8831 ~           >					push		af
+218+  8831 ~           >
+218+  8831 ~           >					push		bc
+218+  8831 ~           >					push		de
+218+  8831 ~           >					push		hl
+218+  8831 ~           >					ld			a, SPHERE_ATTR
+218+  8831 ~           >					call		DrawChar
+218+  8831 ~           >					pop			hl
+218+  8831 ~           >					pop			de
+218+  8831 ~           >					pop			bc
+218+  8831 ~           >
+218+  8831 ~           >					push		bc
+218+  8831 ~           >					push		de
+218+  8831 ~           >				if left
+218+  8831 ~           >					dec			c
+218+  8831 ~           >					ld			a, 8
+218+  8831 ~           >					add			a, e
+218+  8831 ~           >				else
+218+  8831 ~           >					inc			c
+218+  8831 ~           >					ld			a, e
+218+  8831 ~           >					sub			8
+218+  8831 ~           >				endif
+218+  8831 ~           >					ld			e, a
+218+  8831 ~           >					ld			a, SPHERE_ATTR
+218+  8831 ~           >					call		DrawChar
+218+  8831 ~           >					pop			de
+218+  8831 ~           >					pop			bc
+218+  8831 ~           >
+218+  8831 ~           >					pop			af
+218+  8831             >				endif ; shift
+218+  8831             >
+218+  8831 0F          >					rrca
+218+  8832 E6 01       >					and			1
+218+  8834             >				if 1
+218+  8834 3C          >					inc			a
+218+  8835             >				else
+218+  8835 ~           >					add			a, 3
+218+  8835             >				endif
+218+  8835 6F          >					ld			l, a
+218+  8836 26 00       >					ld			h, 0
+218+  8838 54          >					ld			d, h
+218+  8839             >
+218+  8839 E5          >					push		hl
+218+  883A D5          >					push		de
+218+  883B C5          >					push		bc
+218+  883C 3E 4F       >					ld			a, PLAYER_ATTR
+218+  883E             >				if 1
+218+  883E 0C          >					inc			c
+218+  883F             >				else
+218+  883F ~           >					dec			c
+218+  883F             >				endif
+218+  883F CD 4E 82    >					call		DrawChar
+218+  8842 C1          >					pop			bc
+218+  8843 D1          >					pop			de
+218+  8844 E1          >					pop			hl
+218+  8845             >
+218+  8845             >				if 0
+218+  8845 ~           >					ld			a, DRAW_OR
+218+  8845 ~           >					call		SetDrawCharMode
+218+  8845             >				endif
+218+  8845             >
+218+  8845 7B          >					ld			a, e
+218+  8846             >				if 1
+218+  8846 C6 08       >					add			a, 8
+218+  8848             >				else
+218+  8848 ~           >					sub			8
+218+  8848             >				endif
+218+  8848 5F          >					ld			e, a
+218+  8849 3E 4F       >					ld			a, PLAYER_ATTR
+218+  884B             >				if 0
+218+  884B ~           >					call		DrawChar
+218+  884B ~           >					ld			a, DRAW_REPLACE
+218+  884B ~           >					jp			SetDrawCharMode
+218+  884B             >				else
+218+  884B C3 4E 82    >					jp			DrawChar
+218+  884E             >				endif
+218+  884E             >
+219+  884E              .drawDown:			DRAWVERT	0, 0
+219+  884E             >
+219+  884E DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+219+  8851             >					dup			PLAYER_MOVE_DELAY_BITS
+219+  8851 0F          >					rrca
+219+  8852             >					edup
+219+  8852 E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+219+  8854 3C          >					inc			a
+219+  8855             >				if 0
+219+  8855 ~           >					neg
+219+  8855             >				endif
+219+  8855 57          >					ld			d, a
+219+  8856 1E 00       >					ld			e, 0
+219+  8858             >
+219+  8858 E6 03       >					and			3
+219+  885A             >
+219+  885A             >				if 0
+219+  885A ~           >					push		af
+219+  885A ~           >					push		de
+219+  885A ~           >					push		bc
+219+  885A ~           >					ld			h, 1
+219+  885A ~           >					ld			l, a
+219+  885A ~           >					ld			a, SPHERE_ATTR
+219+  885A ~           >					call		DrawChar
+219+  885A ~           >					pop			bc
+219+  885A ~           >					pop			de
+219+  885A ~           >					pop			af
+219+  885A             >			 	endif ; shift
+219+  885A             >
+219+  885A C6 05       >					add			a, 5
+219+  885C 6F          >					ld			l, a
+219+  885D 63          >					ld			h, e
+219+  885E             >
+219+  885E 3E 4F       >					ld			a, PLAYER_ATTR
+219+  8860             >				if 0
+219+  8860 ~           >					inc			b
+219+  8860 ~           >					push		de
+219+  8860 ~           >					push		bc
+219+  8860 ~           >					call		DrawChar
+219+  8860 ~           >					pop			bc
+219+  8860 ~           >					pop			de
+219+  8860 ~           >
+219+  8860 ~           >					ld			a, 8
+219+  8860 ~           >					add			a, d
+219+  8860 ~           >					ld			d, a
+219+  8860 ~           >					jp			DrawEmptyByte
+219+  8860             >				else
+219+  8860 05          >					dec			b
+219+  8861 C3 4E 82    >					jp			DrawChar
+219+  8864             >				endif
+219+  8864             >
+220+  8864              .drawUp:			DRAWVERT	1, 0
+220+  8864             >
+220+  8864 DD 7E 03    >					ld			a, (ix+SPLAYER.time)
+220+  8867             >					dup			PLAYER_MOVE_DELAY_BITS
+220+  8867 0F          >					rrca
+220+  8868             >					edup
+220+  8868 E6 7F       >					and			(1<<(8-PLAYER_MOVE_DELAY_BITS))-1
+220+  886A 3C          >					inc			a
+220+  886B             >				if 1
+220+  886B ED 44       >					neg
+220+  886D             >				endif
+220+  886D 57          >					ld			d, a
+220+  886E 1E 00       >					ld			e, 0
+220+  8870             >
+220+  8870 E6 03       >					and			3
+220+  8872             >
+220+  8872             >				if 0
+220+  8872 ~           >					push		af
+220+  8872 ~           >					push		de
+220+  8872 ~           >					push		bc
+220+  8872 ~           >					ld			h, 1
+220+  8872 ~           >					ld			l, a
+220+  8872 ~           >					ld			a, SPHERE_ATTR
+220+  8872 ~           >					call		DrawChar
+220+  8872 ~           >					pop			bc
+220+  8872 ~           >					pop			de
+220+  8872 ~           >					pop			af
+220+  8872             >			 	endif ; shift
+220+  8872             >
+220+  8872 C6 05       >					add			a, 5
+220+  8874 6F          >					ld			l, a
+220+  8875 63          >					ld			h, e
+220+  8876             >
+220+  8876 3E 4F       >					ld			a, PLAYER_ATTR
+220+  8878             >				if 1
+220+  8878 04          >					inc			b
+220+  8879 D5          >					push		de
+220+  887A C5          >					push		bc
+220+  887B CD 4E 82    >					call		DrawChar
+220+  887E C1          >					pop			bc
+220+  887F D1          >					pop			de
+220+  8880             >
+220+  8880 3E 08       >					ld			a, 8
+220+  8882 82          >					add			a, d
+220+  8883 57          >					ld			d, a
+220+  8884 C3 0F 82    >					jp			DrawEmptyByte
+220+  8887             >				else
+220+  8887 ~           >					dec			b
+220+  8887 ~           >					jp			DrawChar
+220+  8887             >				endif
+220+  8887             >
+221+  8887
+222+  8887              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+223+  8887
+224+  8887              					macro 		PLAYERGO state, shift
+225+  8887 ~
+226+  8887 ~            					ld			c, (ix+SPLAYER.x)
+227+  8887 ~            					ld			b, (ix+SPLAYER.y)
+228+  8887 ~            				if state == PLAYER_GO_UP
+229+  8887 ~            					dec			b
+230+  8887 ~            				elseif state == PLAYER_GO_DOWN
+231+  8887 ~            					inc			b
+232+  8887 ~            				elseif state == PLAYER_GO_LEFT
+233+  8887 ~            					dec			c
+234+  8887 ~            				elseif state == PLAYER_GO_RIGHT
+235+  8887 ~            					inc			c
+236+  8887 ~            				endif
+237+  8887 ~            					call		CheckBlocked
+238+  8887 ~            					jr			nz, .tryShift
+239+  8887 ~            					ld			a, state
+240+  8887 ~            .doGo:			if state == PLAYER_GO_DOWN || state == PLAYER_GO_UP
+241+  8887 ~            					ld			(ix+SPLAYER.y), b
+242+  8887 ~            				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+243+  8887 ~            					ld			(ix+SPLAYER.x), c
+244+  8887 ~            				endif
+245+  8887 ~            					ld			(ix+SPLAYER.state), a
+246+  8887 ~            					ld			(ix+SPLAYER.time), 0
+247+  8887 ~            					ret
+248+  8887 ~            .tryShift:			cp			'O'
+249+  8887 ~            					ret			nz
+250+  8887 ~            				if state == PLAYER_GO_UP
+251+  8887 ~            					dec			b
+252+  8887 ~            				elseif state == PLAYER_GO_DOWN
+253+  8887 ~            					inc			b
+254+  8887 ~            				elseif state == PLAYER_GO_LEFT
+255+  8887 ~            					dec			c
+256+  8887 ~            				elseif state == PLAYER_GO_RIGHT
+257+  8887 ~            					inc			c
+258+  8887 ~            				endif
+259+  8887 ~            					call		CheckBlocked
+260+  8887 ~            					ret			nz
+261+  8887 ~            					ld			(hl), 'O'
+262+  8887 ~            				if state == PLAYER_GO_UP
+263+  8887 ~            					inc			b
+264+  8887 ~            					ld			de, 32
+265+  8887 ~            					add			hl, de
+266+  8887 ~            				elseif state == PLAYER_GO_DOWN
+267+  8887 ~            					dec			b
+268+  8887 ~            					ld			de, -32
+269+  8887 ~            					add			hl, de
+270+  8887 ~            				elseif state == PLAYER_GO_LEFT
+271+  8887 ~            					inc			c
+272+  8887 ~            					inc			hl
+273+  8887 ~            				elseif state == PLAYER_GO_RIGHT
+274+  8887 ~            					dec			c
+275+  8887 ~            					dec			hl
+276+  8887 ~            				endif
+277+  8887 ~            					ld			(hl), ' '
+278+  8887 ~            					ld			a, shift
+279+  8887 ~            					jr			.doGo
+280+  8887 ~
+281+  8887              					endm
+282+  8887
+283+  8887 DD 6E 02     HandlePlayer:		ld			l, (ix+SPLAYER.state)
+284+  888A 26 00        					ld			h, 0
+285+  888C 01 91 88     					ld			bc, .jumpTable
+286+  888F 09           					add			hl, bc
+287+  8890 E9           					jp			(hl)
+288+  8891 C3 C0 88     .jumpTable:			jp			.idle
+289+  8894 C3 AC 88     					jp			.move
+290+  8897 C3 AC 88     					jp			.move
+291+  889A C3 AC 88     					jp			.move
+292+  889D C3 AC 88     					jp			.move
+293+  88A0 C3 AC 88     					jp			.move
+294+  88A3 C3 AC 88     					jp			.move
+295+  88A6 C3 AC 88     					jp			.move
+296+  88A9 C3 AC 88     					jp			.move
+297+  88AC
+298+  88AC DD 7E 03     .move:				ld			a, (ix+SPLAYER.time)
+299+  88AF 3C           					inc			a
+300+  88B0 FE 10        					cp			(8<<PLAYER_MOVE_DELAY_BITS)
+301+  88B2 28 04        					jr			z, .moveDone
+302+  88B4 DD 77 03     					ld			(ix+SPLAYER.time), a
+303+  88B7 C9           					ret
+304+  88B8 DD 36 02 00  .moveDone:			ld			(ix+SPLAYER.state), PLAYER_IDLE
+305+  88BC DD 36 03 00  					ld			(ix+SPLAYER.time), 0
+306+  88C0              					;jr			.idle
+307+  88C0
+308+  88C0 21 CD 83     .idle:				ld			hl, Input.left
+309+  88C3 AF           					xor			a
+310+  88C4 BE           					cp			(hl)
+311+  88C5 28 0E        					jr			z, .goLeft
+312+  88C7
+313+  88C7 23           					inc			hl
+314+  88C8 BE           					cp			(hl)
+315+  88C9 28 35        					jr			z, .goRight
+316+  88CB
+317+  88CB 23           					inc			hl
+318+  88CC BE           					cp			(hl)
+319+  88CD 28 5C        					jr			z, .goUp
+320+  88CF
+321+  88CF 23           					inc			hl
+322+  88D0 BE           					cp			(hl)
+323+  88D1 CA 59 89     					jp			z, .goDown
+324+  88D4
+325+  88D4 C9           					ret
+326+  88D5
+327+  88D5              .goLeft:			PLAYERGO	PLAYER_GO_LEFT, PLAYER_SHIFT_LEFT
+327+  88D5             >
+327+  88D5 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
+327+  88D8 DD 46 01    >					ld			b, (ix+SPLAYER.y)
+327+  88DB             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
+327+  88DB ~           >					dec			b
+327+  88DB             >				elseif state == PLAYER_GO_DOWN
+327+  88DB ~           >					inc			b
+327+  88DB             >				elseif state == PLAYER_GO_LEFT
+327+  88DB 0D          >					dec			c
+327+  88DC             >				elseif state == PLAYER_GO_RIGHT
+327+  88DC ~           >					inc			c
+327+  88DC             >				endif
+327+  88DC CD B2 86    >					call		CheckBlocked
+327+  88DF 20 0D       >					jr			nz, .tryShift
+327+  88E1 3E 03       >					ld			a, PLAYER_GO_LEFT
+327+  88E3             >.doGo:			if PLAYER_GO_LEFT == PLAYER_GO_DOWN || PLAYER_GO_LEFT == PLAYER_GO_UP
+327+  88E3 ~           >					ld			(ix+SPLAYER.y), b
+327+  88E3             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+327+  88E3 DD 71 00    >					ld			(ix+SPLAYER.x), c
+327+  88E6             >				endif
+327+  88E6 DD 77 02    >					ld			(ix+SPLAYER.state), a
+327+  88E9 DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
+327+  88ED C9          >					ret
+327+  88EE FE 4F       >.tryShift:			cp			'O'
+327+  88F0 C0          >					ret			nz
+327+  88F1             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
+327+  88F1 ~           >					dec			b
+327+  88F1             >				elseif state == PLAYER_GO_DOWN
+327+  88F1 ~           >					inc			b
+327+  88F1             >				elseif state == PLAYER_GO_LEFT
+327+  88F1 0D          >					dec			c
+327+  88F2             >				elseif state == PLAYER_GO_RIGHT
+327+  88F2 ~           >					inc			c
+327+  88F2             >				endif
+327+  88F2 CD B2 86    >					call		CheckBlocked
+327+  88F5 C0          >					ret			nz
+327+  88F6 36 4F       >					ld			(hl), 'O'
+327+  88F8             >				if PLAYER_GO_LEFT == PLAYER_GO_UP
+327+  88F8 ~           >					inc			b
+327+  88F8 ~           >					ld			de, 32
+327+  88F8 ~           >					add			hl, de
+327+  88F8             >				elseif state == PLAYER_GO_DOWN
+327+  88F8 ~           >					dec			b
+327+  88F8 ~           >					ld			de, -32
+327+  88F8 ~           >					add			hl, de
+327+  88F8             >				elseif state == PLAYER_GO_LEFT
+327+  88F8 0C          >					inc			c
+327+  88F9 23          >					inc			hl
+327+  88FA             >				elseif state == PLAYER_GO_RIGHT
+327+  88FA ~           >					dec			c
+327+  88FA ~           >					dec			hl
+327+  88FA             >				endif
+327+  88FA 36 20       >					ld			(hl), ' '
+327+  88FC 3E 0F       >					ld			a, PLAYER_SHIFT_LEFT
+327+  88FE 18 E3       >					jr			.doGo
+327+  8900             >
+328+  8900              .goRight:			PLAYERGO	PLAYER_GO_RIGHT, PLAYER_SHIFT_RIGHT
+328+  8900             >
+328+  8900 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
+328+  8903 DD 46 01    >					ld			b, (ix+SPLAYER.y)
+328+  8906             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
+328+  8906 ~           >					dec			b
+328+  8906             >				elseif state == PLAYER_GO_DOWN
+328+  8906 ~           >					inc			b
+328+  8906             >				elseif state == PLAYER_GO_LEFT
+328+  8906 ~           >					dec			c
+328+  8906             >				elseif state == PLAYER_GO_RIGHT
+328+  8906 0C          >					inc			c
+328+  8907             >				endif
+328+  8907 CD B2 86    >					call		CheckBlocked
+328+  890A 20 0D       >					jr			nz, .tryShift
+328+  890C 3E 06       >					ld			a, PLAYER_GO_RIGHT
+328+  890E             >.doGo:			if PLAYER_GO_RIGHT == PLAYER_GO_DOWN || PLAYER_GO_RIGHT == PLAYER_GO_UP
+328+  890E ~           >					ld			(ix+SPLAYER.y), b
+328+  890E             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+328+  890E DD 71 00    >					ld			(ix+SPLAYER.x), c
+328+  8911             >				endif
+328+  8911 DD 77 02    >					ld			(ix+SPLAYER.state), a
+328+  8914 DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
+328+  8918 C9          >					ret
+328+  8919 FE 4F       >.tryShift:			cp			'O'
+328+  891B C0          >					ret			nz
+328+  891C             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
+328+  891C ~           >					dec			b
+328+  891C             >				elseif state == PLAYER_GO_DOWN
+328+  891C ~           >					inc			b
+328+  891C             >				elseif state == PLAYER_GO_LEFT
+328+  891C ~           >					dec			c
+328+  891C             >				elseif state == PLAYER_GO_RIGHT
+328+  891C 0C          >					inc			c
+328+  891D             >				endif
+328+  891D CD B2 86    >					call		CheckBlocked
+328+  8920 C0          >					ret			nz
+328+  8921 36 4F       >					ld			(hl), 'O'
+328+  8923             >				if PLAYER_GO_RIGHT == PLAYER_GO_UP
+328+  8923 ~           >					inc			b
+328+  8923 ~           >					ld			de, 32
+328+  8923 ~           >					add			hl, de
+328+  8923             >				elseif state == PLAYER_GO_DOWN
+328+  8923 ~           >					dec			b
+328+  8923 ~           >					ld			de, -32
+328+  8923 ~           >					add			hl, de
+328+  8923             >				elseif state == PLAYER_GO_LEFT
+328+  8923 ~           >					inc			c
+328+  8923 ~           >					inc			hl
+328+  8923             >				elseif state == PLAYER_GO_RIGHT
+328+  8923 0D          >					dec			c
+328+  8924 2B          >					dec			hl
+328+  8925             >				endif
+328+  8925 36 20       >					ld			(hl), ' '
+328+  8927 3E 12       >					ld			a, PLAYER_SHIFT_RIGHT
+328+  8929 18 E3       >					jr			.doGo
+328+  892B             >
+329+  892B              .goUp:				PLAYERGO	PLAYER_GO_UP, PLAYER_SHIFT_UP
+329+  892B             >
+329+  892B DD 4E 00    >					ld			c, (ix+SPLAYER.x)
+329+  892E DD 46 01    >					ld			b, (ix+SPLAYER.y)
+329+  8931             >				if PLAYER_GO_UP == PLAYER_GO_UP
+329+  8931 05          >					dec			b
+329+  8932             >				elseif state == PLAYER_GO_DOWN
+329+  8932 ~           >					inc			b
+329+  8932             >				elseif state == PLAYER_GO_LEFT
+329+  8932 ~           >					dec			c
+329+  8932             >				elseif state == PLAYER_GO_RIGHT
+329+  8932 ~           >					inc			c
+329+  8932             >				endif
+329+  8932 CD B2 86    >					call		CheckBlocked
+329+  8935 20 0D       >					jr			nz, .tryShift
+329+  8937 3E 09       >					ld			a, PLAYER_GO_UP
+329+  8939             >.doGo:			if PLAYER_GO_UP == PLAYER_GO_DOWN || PLAYER_GO_UP == PLAYER_GO_UP
+329+  8939 DD 70 01    >					ld			(ix+SPLAYER.y), b
+329+  893C             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+329+  893C ~           >					ld			(ix+SPLAYER.x), c
+329+  893C             >				endif
+329+  893C DD 77 02    >					ld			(ix+SPLAYER.state), a
+329+  893F DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
+329+  8943 C9          >					ret
+329+  8944 FE 4F       >.tryShift:			cp			'O'
+329+  8946 C0          >					ret			nz
+329+  8947             >				if PLAYER_GO_UP == PLAYER_GO_UP
+329+  8947 05          >					dec			b
+329+  8948             >				elseif state == PLAYER_GO_DOWN
+329+  8948 ~           >					inc			b
+329+  8948             >				elseif state == PLAYER_GO_LEFT
+329+  8948 ~           >					dec			c
+329+  8948             >				elseif state == PLAYER_GO_RIGHT
+329+  8948 ~           >					inc			c
+329+  8948             >				endif
+329+  8948 CD B2 86    >					call		CheckBlocked
+329+  894B C0          >					ret			nz
+329+  894C 36 4F       >					ld			(hl), 'O'
+329+  894E             >				if PLAYER_GO_UP == PLAYER_GO_UP
+329+  894E 04          >					inc			b
+329+  894F 11 20 00    >					ld			de, 32
+329+  8952 19          >					add			hl, de
+329+  8953             >				elseif state == PLAYER_GO_DOWN
+329+  8953 ~           >					dec			b
+329+  8953 ~           >					ld			de, -32
+329+  8953 ~           >					add			hl, de
+329+  8953             >				elseif state == PLAYER_GO_LEFT
+329+  8953 ~           >					inc			c
+329+  8953 ~           >					inc			hl
+329+  8953             >				elseif state == PLAYER_GO_RIGHT
+329+  8953 ~           >					dec			c
+329+  8953 ~           >					dec			hl
+329+  8953             >				endif
+329+  8953 36 20       >					ld			(hl), ' '
+329+  8955 3E 15       >					ld			a, PLAYER_SHIFT_UP
+329+  8957 18 E0       >					jr			.doGo
+329+  8959             >
+330+  8959              .goDown:			PLAYERGO	PLAYER_GO_DOWN, PLAYER_SHIFT_DOWN
+330+  8959             >
+330+  8959 DD 4E 00    >					ld			c, (ix+SPLAYER.x)
+330+  895C DD 46 01    >					ld			b, (ix+SPLAYER.y)
+330+  895F             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
+330+  895F ~           >					dec			b
+330+  895F             >				elseif state == PLAYER_GO_DOWN
+330+  895F 04          >					inc			b
+330+  8960             >				elseif state == PLAYER_GO_LEFT
+330+  8960 ~           >					dec			c
+330+  8960             >				elseif state == PLAYER_GO_RIGHT
+330+  8960 ~           >					inc			c
+330+  8960             >				endif
+330+  8960 CD B2 86    >					call		CheckBlocked
+330+  8963 20 0D       >					jr			nz, .tryShift
+330+  8965 3E 0C       >					ld			a, PLAYER_GO_DOWN
+330+  8967             >.doGo:			if PLAYER_GO_DOWN == PLAYER_GO_DOWN || PLAYER_GO_DOWN == PLAYER_GO_UP
+330+  8967 DD 70 01    >					ld			(ix+SPLAYER.y), b
+330+  896A             >				elseif state == PLAYER_GO_LEFT || state == PLAYER_GO_RIGHT
+330+  896A ~           >					ld			(ix+SPLAYER.x), c
+330+  896A             >				endif
+330+  896A DD 77 02    >					ld			(ix+SPLAYER.state), a
+330+  896D DD 36 03 00 >					ld			(ix+SPLAYER.time), 0
+330+  8971 C9          >					ret
+330+  8972 FE 4F       >.tryShift:			cp			'O'
+330+  8974 C0          >					ret			nz
+330+  8975             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
+330+  8975 ~           >					dec			b
+330+  8975             >				elseif state == PLAYER_GO_DOWN
+330+  8975 04          >					inc			b
+330+  8976             >				elseif state == PLAYER_GO_LEFT
+330+  8976 ~           >					dec			c
+330+  8976             >				elseif state == PLAYER_GO_RIGHT
+330+  8976 ~           >					inc			c
+330+  8976             >				endif
+330+  8976 CD B2 86    >					call		CheckBlocked
+330+  8979 C0          >					ret			nz
+330+  897A 36 4F       >					ld			(hl), 'O'
+330+  897C             >				if PLAYER_GO_DOWN == PLAYER_GO_UP
+330+  897C ~           >					inc			b
+330+  897C ~           >					ld			de, 32
+330+  897C ~           >					add			hl, de
+330+  897C             >				elseif state == PLAYER_GO_DOWN
+330+  897C 05          >					dec			b
+330+  897D 11 E0 FF    >					ld			de, -32
+330+  8980 19          >					add			hl, de
+330+  8981             >				elseif state == PLAYER_GO_LEFT
+330+  8981 ~           >					inc			c
+330+  8981 ~           >					inc			hl
+330+  8981             >				elseif state == PLAYER_GO_RIGHT
+330+  8981 ~           >					dec			c
+330+  8981 ~           >					dec			hl
+330+  8981             >				endif
+330+  8981 36 20       >					ld			(hl), ' '
+330+  8983 3E 18       >					ld			a, PLAYER_SHIFT_DOWN
+330+  8985 18 E0       >					jr			.doGo
+330+  8987             >
+331+  8987
 # file closed: player.asm
- 46   8957
- 47   8957 00 00 00...  					ds			0xa000-$
+ 46   8987
+ 47   8987 00 00 00...  					ds			0xa000-$
  48   A000              					org			0xa000
  49   A000
  50   A000              gfx:				incbin		"gfx/gfx.scr"
