@@ -17,9 +17,9 @@ Level:				db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 					db			"X                      O    *  X"
 					db			"X * O                          X"
 					db			"X                              X"
-					db			"X        1                     X"
 					db			"X                              X"
-					db			"X        *  O                  X"
+					db			"X                              X"
+					db			"X        *  O1                 X"
 					db			"X                        O  *  X"
 					db			"X           *  O               X"
 					db			"X                              X"
@@ -45,6 +45,9 @@ InitLevel:			ld			hl, LevelEnd
 					djnz		.colLoop
 					dec			c
 					jr			nz, .rowLoop
+					ld			hl, UndoBuffer
+					ld			(UndoHead), hl
+					ld			(UndoTail), hl
 					ret
 .handlePlayerStart:	ld			(hl), ' '
 					ld			a, b

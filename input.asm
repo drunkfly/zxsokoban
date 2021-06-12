@@ -19,6 +19,10 @@ ReadInput:			ld			bc, 0xfbfe
 					and			1					; P
 					ld			(Input.right), a
 
+					ld			a, b
+					and			8					; U
+					ld			(Input.undo), a
+
 					ld			bc, 0x7ffe
 					in			a, (c)
 					and			1					; Space
@@ -27,6 +31,7 @@ ReadInput:			ld			bc, 0xfbfe
 					ret
 					
 Input:
+.undo:				db			1
 .left:				db			1
 .right:				db			1
 .up:				db			1

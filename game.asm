@@ -42,12 +42,15 @@ FramesPending:		db			0
 					include		"draw.asm"
 					include		"input.asm"
 					include		"level.asm"
+					include		"undo.asm"
 					include		"player.asm"
 
 					ds			0xa000-$
 					org			0xa000
 
 gfx:				incbin		"gfx/gfx.scr"
+
+					include		"bss.asm"
 
 					savesna 	"game.sna", start
 					SLDOPT 		COMMENT WPMEM, LOGPOINT, ASSERTION

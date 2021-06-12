@@ -8,6 +8,14 @@ PLAYER_SHIFT_LEFT	equ			15
 PLAYER_SHIFT_RIGHT	equ			18
 PLAYER_SHIFT_UP		equ			21
 PLAYER_SHIFT_DOWN	equ			24
+PLAYER_UNDO_GO_LEFT	equ			27
+PLAYER_UNDO_GO_RIGHT equ		30
+PLAYER_UNDO_GO_UP	equ			33
+PLAYER_UNDO_GO_DOWN equ			36
+PLAYER_UNDO_SHIFT_LEFT	equ		39
+PLAYER_UNDO_SHIFT_RIGHT equ		42
+PLAYER_UNDO_SHIFT_UP	equ		45
+PLAYER_UNDO_SHIFT_DOWN equ		48
 
 ;PLAYER_MAX_X		equ 		31
 ;PLAYER_MAX_Y		equ			23
@@ -62,15 +70,15 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 
 					push		bc
 					push		de
-				if left
+				  if left
 					dec			c
 					ld			a, 8
 					add			a, e
-				else
+				  else
 					inc			c
 					ld			a, e
 					sub			8
-				endif
+				  endif
 					ld			e, a
 					ld			a, SPHERE_ATTR
 					call		DrawChar
@@ -166,20 +174,42 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 					ld			a, PLAYER_ATTR
 				if up
 					inc			b
+				else
+					dec			b
+				endif	
 					push		de
 					push		bc
 					call		DrawChar
 					pop			bc
 					pop			de
 
-					ld			a, 8
-					add			a, d
+;				if shift
+;					ld			a, (ix+SPLAYER.state)
+;					cp			PLAYER_UNDO_SHIFT_DOWN
+;					jr			z, .goDown
+;					cp			PLAYER_UNDO_SHIFT_UP
+;					ret			nz
+;.goUp:
+;					ld			a, d
+;					jr			.doneGo
+;.goDown:
+;					ld			a, d
+;					sub			8
+;.doneGo:
+;				else
+				if !up
+					ld			a, (ix+SPLAYER.state)
+					cp			PLAYER_UNDO_GO_DOWN
+					ret			nz
+					ld			a, d
+					and			7
+					ret			z
+				endif
+
+					ld			a, d
+					add			a, 8
 					ld			d, a
 					jp			DrawEmptyByte
-				else
-					dec			b
-					jp			DrawChar
-				endif
 
 					endm
 
@@ -194,6 +224,14 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					add			hl, de
 					jp			(hl)
 .jumpTable:			jp			.drawIdle
+					jp			.drawLeft
+					jp			.drawRight
+					jp			.drawUp
+					jp			.drawDown
+					jp			.drawShiftLeft
+					jp			.drawShiftRight
+					jp			.drawShiftUp
+					jp			.drawShiftDown
 					jp			.drawLeft
 					jp			.drawRight
 					jp			.drawUp
@@ -236,6 +274,16 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 				endif
 					call		CheckBlocked
 					jr			nz, .tryShift
+				if state == PLAYER_GO_UP
+					ld			de, UndoPlayerMoveUp
+				elseif state == PLAYER_GO_DOWN
+					ld			de, UndoPlayerMoveDown
+				elseif state == PLAYER_GO_LEFT
+					ld			de, UndoPlayerMoveLeft
+				elseif state == PLAYER_GO_RIGHT
+					ld			de, UndoPlayerMoveRight
+				endif
+					call		AddUndo
 					ld			a, state
 .doGo:			if state == PLAYER_GO_DOWN || state == PLAYER_GO_UP
 					ld			(ix+SPLAYER.y), b
@@ -263,22 +311,112 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					inc			b
 					ld			de, 32
 					add			hl, de
+					ld			de, UndoPlayerShiftUp
 				elseif state == PLAYER_GO_DOWN
 					dec			b
 					ld			de, -32
 					add			hl, de
+					ld			de, UndoPlayerShiftDown
 				elseif state == PLAYER_GO_LEFT
 					inc			c
 					inc			hl
+					ld			de, UndoPlayerShiftLeft
 				elseif state == PLAYER_GO_RIGHT
 					dec			c
 					dec			hl
+					ld			de, UndoPlayerShiftRight
 				endif
 					ld			(hl), ' '
+					call		AddUndo
 					ld			a, shift
 					jr			.doGo
 
 					endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+					macro		UNDOMOVE state
+
+					ld			a, (ix+SPLAYER.time)
+					dec			a
+					cp			0xff
+					jr			z, .undoMoveDone
+					ld			(ix+SPLAYER.time), a
+					ret
+.undoMoveDone:		ld			(ix+SPLAYER.state), PLAYER_IDLE
+					ld			(ix+SPLAYER.time), 0
+				if state == PLAYER_UNDO_GO_LEFT
+					inc			(ix+SPLAYER.x)
+					jp			.idle
+				elseif state == PLAYER_UNDO_GO_RIGHT
+					dec			(ix+SPLAYER.x)
+					jp			.idle
+				elseif state == PLAYER_UNDO_GO_UP
+					inc			(ix+SPLAYER.y)
+					jp			.idle
+				elseif state == PLAYER_UNDO_GO_DOWN
+					ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					dec			b
+					ld			(ix+SPLAYER.y), b
+					ld			d, 8
+					jp			DrawEmptyByte
+				elseif state == PLAYER_UNDO_SHIFT_LEFT || state == PLAYER_UNDO_SHIFT_RIGHT || state == PLAYER_UNDO_SHIFT_UP || state == PLAYER_UNDO_SHIFT_DOWN
+					ld			c, (ix+SPLAYER.x)
+					ld			b, (ix+SPLAYER.y)
+					push		bc
+					ld			a, SPHERE_ATTR
+					ld			de, 0
+					ld			hl, 0x100
+					call		DrawChar
+					pop			bc
+				  if state == PLAYER_UNDO_SHIFT_LEFT	
+					inc			c
+				  elseif state == PLAYER_UNDO_SHIFT_RIGHT
+					dec			c
+				  elseif state == PLAYER_UNDO_SHIFT_UP
+					inc			b
+				  elseif state == PLAYER_UNDO_SHIFT_DOWN
+					dec			b
+				  endif	
+					ld			(ix+SPLAYER.x), c
+				  if state == PLAYER_UNDO_SHIFT_LEFT	
+					dec			c
+					dec			c
+				  elseif state == PLAYER_UNDO_SHIFT_RIGHT
+					inc			c
+					inc			c
+				  elseif state == PLAYER_UNDO_SHIFT_UP
+					dec			b
+					dec			b
+				  elseif state == PLAYER_UNDO_SHIFT_DOWN
+					inc			b
+					inc			b
+				  endif	
+					call		GetLevelAddr
+					ld			(hl), ' '
+				  if state == PLAYER_UNDO_SHIFT_LEFT
+					inc			hl
+				  elseif state == PLAYER_UNDO_SHIFT_RIGHT
+				  	dec			hl
+				  elseif state == PLAYER_UNDO_SHIFT_UP
+				  	ld			de, 32
+					add			hl, de
+				  elseif state == PLAYER_UNDO_SHIFT_DOWN
+				  	ld			de, -32
+					add			hl, de
+				  endif	
+					ld			(hl), 'O'
+					ld			a, FLOOR_ATTR
+					ld			de, 0
+					ld			hl, 0x201
+					call		DrawChar
+					jp			.idle
+				endif
+
+					endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandlePlayer:		ld			l, (ix+SPLAYER.state)
 					ld			h, 0
@@ -294,6 +432,24 @@ HandlePlayer:		ld			l, (ix+SPLAYER.state)
 					jp			.move
 					jp			.move
 					jp			.move
+					jp			.undoMoveLeft
+					jp			.undoMoveRight
+					jp			.undoMoveUp
+					jp			.undoMoveDown
+					jp			.undoShiftLeft
+					jp			.undoShiftRight
+					jp			.undoShiftUp
+					jp			.undoShiftDown
+
+.undoMoveLeft:		UNDOMOVE	PLAYER_UNDO_GO_LEFT
+.undoMoveRight:		UNDOMOVE	PLAYER_UNDO_GO_RIGHT
+.undoMoveUp:		UNDOMOVE	PLAYER_UNDO_GO_UP
+.undoMoveDown:		UNDOMOVE	PLAYER_UNDO_GO_DOWN
+
+.undoShiftLeft:		UNDOMOVE	PLAYER_UNDO_SHIFT_LEFT
+.undoShiftRight:	UNDOMOVE	PLAYER_UNDO_SHIFT_RIGHT
+.undoShiftUp:		UNDOMOVE	PLAYER_UNDO_SHIFT_UP
+.undoShiftDown:		UNDOMOVE	PLAYER_UNDO_SHIFT_DOWN
 
 .move:				ld			a, (ix+SPLAYER.time)
 					inc			a
@@ -305,8 +461,12 @@ HandlePlayer:		ld			l, (ix+SPLAYER.state)
 					ld			(ix+SPLAYER.time), 0
 					;jr			.idle
 
-.idle:				ld			hl, Input.left
+.idle:				ld			hl, Input.undo
 					xor			a
+					cp			(hl)
+					jp			z, UndoLastMove
+
+					inc			hl
 					cp			(hl)
 					jr			z, .goLeft
 
