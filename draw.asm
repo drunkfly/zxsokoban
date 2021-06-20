@@ -1,4 +1,6 @@
 
+CHARS = 23606
+
 				; Input:
 				;   A = attribute
 
@@ -75,22 +77,23 @@ DRAW_OR			equ		0xB6		; or (hl)
                 ; Input:
                 ;   A = mode (DRAW_OR или DRAW_REPLACE)
 
-SetDrawCharMode:ld		(DrawChar.hotPatch1), a
-				ld		(DrawChar.hotPatch2), a
-				ld		(DrawChar.hotPatch3), a
-				ld		(DrawChar.hotPatch4), a
-				ld		(DrawChar.hotPatch5), a
-				ld		(DrawChar.hotPatch6), a
-				ld		(DrawChar.hotPatch7), a
-				ld		(DrawChar.hotPatch8), a
-				ld		(DrawChar.hotPatch9), a
-				ld		(DrawChar.hotPatch10), a
-				ld		(DrawChar.hotPatch11), a
-				ld		(DrawChar.hotPatch12), a
-				ld		(DrawChar.hotPatch13), a
-				ld		(DrawChar.hotPatch14), a
-				ld		(DrawChar.hotPatch15), a
-				ld		(DrawChar.hotPatch16), a
+SetDrawSpriteMode:
+				ld		(DrawSprite.hotPatch1), a
+				ld		(DrawSprite.hotPatch2), a
+				ld		(DrawSprite.hotPatch3), a
+				ld		(DrawSprite.hotPatch4), a
+				ld		(DrawSprite.hotPatch5), a
+				ld		(DrawSprite.hotPatch6), a
+				ld		(DrawSprite.hotPatch7), a
+				ld		(DrawSprite.hotPatch8), a
+				ld		(DrawSprite.hotPatch9), a
+				ld		(DrawSprite.hotPatch10), a
+				ld		(DrawSprite.hotPatch11), a
+				ld		(DrawSprite.hotPatch12), a
+				ld		(DrawSprite.hotPatch13), a
+				ld		(DrawSprite.hotPatch14), a
+				ld		(DrawSprite.hotPatch15), a
+				ld		(DrawSprite.hotPatch16), a
 				ret
 
                 ; Input:
@@ -102,7 +105,7 @@ SetDrawCharMode:ld		(DrawChar.hotPatch1), a
                 ;   C = X (знакоместо)
                 ;   B = Y (знакоместо)
 
-DrawChar:    	; Сохраняем А
+DrawSprite:    	; Сохраняем А
                 ex      af, af'
                 ; Патчим код
                 ld		a, e
@@ -364,3 +367,64 @@ DownHL:			inc		h
 				add		a, h
 				ld		h, a
 				ret
+
+                ; Input:
+                ;   L = symbol
+                ;   A = attribute
+                ;   C = X (знакоместо)
+                ;   B = Y (знакоместо)
+
+DrawChar:       ; Сохраняем А
+                ex      af, af'
+                ; Расчитываем адрес назначения
+                ld		iyh, 0x40
+                call    CalcScreenAddr
+                ; Расчитываем адрес символа
+                ld      h, 0
+                add     hl, hl          ; HL+HL = HL*2
+                add     hl, hl          ; (HL*2)+(HL*2) = HL*4
+                add     hl, hl          ; HL*8
+                ld      bc, (CHARS)
+                add     hl, bc          ; HL => адрес пикселей символа
+                ; Рисуем
+                ld      b, 8
+.loop:          ld      a, (hl)
+                ld      (de), a
+                inc     d
+                inc     hl
+                djnz    .loop
+                ; Расчитываем адрес в области атрибутов
+                dec     d
+                ld      a, d
+                rra
+                rra
+                rra
+                and     0x03
+                or      0x58
+                ld      d, a
+                ; Восстанавливаем A
+                ex      af, af'
+                ; Записываем атрибут
+                ld      (de), a
+                ret
+
+                ; Input:
+                ;   DE = строка
+                ;	IXH = атрибут
+                ;   C = X (знакоместо)
+                ;   B = Y (знакоместо)
+
+DrawString:		ld          a, (de)
+                or			a
+                ret         z
+                push		de
+                push		bc
+                ld			l, a
+				ld			a, ixh
+                call		DrawChar
+                pop			bc
+                pop			de
+                inc			c			; увеличили X
+                inc         de			; следующий символ в буфере
+                jr          DrawString
+                ret

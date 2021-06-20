@@ -1,17 +1,43 @@
 
-ReadInput:			ld			bc, 0xfbfe
+ReadInput:			ld			hl, AnyKey
+					ld			(hl), 0x1f
+
+					ld			bc, 0xa6fe
 					in			a, (c)
+					and			(hl)				; обновляем AnyKey
+					ld			(hl), a
+
+					ld			bc, 0xfbfe
+					in			a, (c)
+					ld			b, a
+					and			(hl)				; обновляем AnyKey
+					ld			(hl), a
+
+					ld			a, b
 					and			1					; Q
 					ld			(Input.up), a
 
+					ld			a, b
+					and			8					; R
+					ld			(Input.restart), a
+
 					ld			bc, 0xfdfe
 					in			a, (c)
+					ld			b, a
+					and			(hl)				; обновляем AnyKey
+					ld			(hl), a
+
+					ld			a, b
 					and			1					; A
 					ld			(Input.down), a
 
 					ld			bc, 0xdffe
 					in			a, (c)
 					ld			b, a
+					and			(hl)				; обновляем AnyKey
+					ld			(hl), a
+
+					ld			a, b
 					and			2					; O
 					ld			(Input.left), a
 
@@ -25,6 +51,11 @@ ReadInput:			ld			bc, 0xfbfe
 
 					ld			bc, 0x7ffe
 					in			a, (c)
+					ld			b, a
+					and			(hl)				; обновляем AnyKey
+					ld			(hl), a
+
+					ld			a, b
 					and			1					; Space
 					ld			(Input.fire), a
 
@@ -37,3 +68,6 @@ Input:
 .up:				db			1
 .down:				db			1
 .fire:				db			1
+.restart:			db			1
+
+AnyKey				db			0x1f

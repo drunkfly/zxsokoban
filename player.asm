@@ -63,7 +63,7 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 					push		de
 					push		hl
 					ld			a, SPHERE_ATTR
-					call		DrawChar
+					call		DrawSprite
 					pop			hl
 					pop			de
 					pop			bc
@@ -81,7 +81,7 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 				  endif
 					ld			e, a
 					ld			a, SPHERE_ATTR
-					call		DrawChar
+					call		DrawSprite
 					pop			de
 					pop			bc
 
@@ -108,14 +108,14 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 				else
 					dec			c
 				endif
-					call		DrawChar
+					call		DrawSprite
 					pop			bc
 					pop			de
 					pop			hl
 
 				if shift
 					ld			a, DRAW_OR
-					call		SetDrawCharMode
+					call		SetDrawSpriteMode
 				endif
 
 					ld			a, e
@@ -127,11 +127,11 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 					ld			e, a
 					ld			a, PLAYER_ATTR
 				if shift
-					call		DrawChar
+					call		DrawSprite
 					ld			a, DRAW_REPLACE
-					jp			SetDrawCharMode
+					jp			SetDrawSpriteMode
 				else
-					jp			DrawChar
+					jp			DrawSprite
 				endif
 
 					endm
@@ -161,7 +161,7 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 					ld			h, 1
 					ld			l, a
 					ld			a, SPHERE_ATTR
-					call		DrawChar
+					call		DrawSprite
 					pop			bc
 					pop			de
 					pop			af
@@ -179,7 +179,7 @@ InitPlayer:			ld			(ix+SPLAYER.state), PLAYER_IDLE
 				endif	
 					push		de
 					push		bc
-					call		DrawChar
+					call		DrawSprite
 					pop			bc
 					pop			de
 
@@ -245,7 +245,7 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			d, h
 					ld			e, h
 					ld			a, PLAYER_ATTR
-					jp			DrawChar
+					jp			DrawSprite
 
 .drawShiftLeft:		DRAWHORZ 	1, 1
 .drawShiftRight:	DRAWHORZ 	0, 1
@@ -368,7 +368,7 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			a, SPHERE_ATTR
 					ld			de, 0
 					ld			hl, 0x100
-					call		DrawChar
+					call		DrawSprite
 					pop			bc
 				  if state == PLAYER_UNDO_SHIFT_LEFT	
 					inc			c
@@ -410,7 +410,7 @@ DrawPlayer:			ld			c, (ix+SPLAYER.x)
 					ld			a, FLOOR_ATTR
 					ld			de, 0
 					ld			hl, 0x201
-					call		DrawChar
+					call		DrawSprite
 					jp			.idle
 				endif
 

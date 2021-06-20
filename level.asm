@@ -7,33 +7,27 @@ SPHERE_ATTR 		equ 		01001110b
 WALL_ATTR  			equ 		00001101b
 TARGET_ATTR			equ			01001010b
 
-					; пробел - пустое место
-					; X - стена
-					; 1 - точка старта
+InitLevel:			xor			a
+					ld			(NumTargets), a
+					ld			(NumCorrectTargets), a
 
-Level:				db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-					db			"X                              X"
-					db			"X                              X"
-					db			"X                      O    *  X"
-					db			"X * O                          X"
-					db			"X                              X"
-					db			"X                              X"
-					db			"X                              X"
-					db			"X        *  O1                 X"
-					db			"X                        O  *  X"
-					db			"X           *  O               X"
-					db			"X                              X"
-					db			"X                              X"
-					db			"X XXX XXX X X XXX XXX  X  XX X X"
-					db			"X X   X X X X X X X X X X XX X X"
-					db			"X XXX X X XX  X X XX  XXX X XX X"
-					db			"X   X X X X X X X X X X X X XX X"
-					db			"X XXX XXX X X XXX XXX X X X  X X"
-					db			"X                              X"
-					db			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-LevelEnd:
+					ld			h, a	; H = 0
+					ld			a, (CurrentLevel)
+					add			a, a
+					ld			l, a
+					ld			bc, Levels
+					add			hl, bc
+					ld			a, (hl)	; читаем адрес данных уровня
+					inc			hl
+					ld			h, (hl)
+					ld			l, a	; HL => указывает на данные уровня
 
-InitLevel:			ld			hl, LevelEnd
+					; копируем данные уровня
+					ld			de, Level
+					ld			bc, LEVEL_WIDTH * LEVEL_HEIGHT
+					ldir
+
+					ld			hl, LevelEnd
 					ld			c, LEVEL_HEIGHT
 .rowLoop:			ld			b, LEVEL_WIDTH
 .colLoop:			dec			hl
@@ -58,6 +52,21 @@ InitLevel:			ld			hl, LevelEnd
 					ld			(player1.y), a
 					ret
 .handleTarget:		ld			(hl), ' '
+					ld			a, (NumTargets)
+					cp			MAX_TARGETS
+					ret			z
+					inc			a
+					ld			(NumTargets), a
+					add			a, a
+					ld			e, a
+					ld			d, high Targets
+					ld			a, b
+					dec			a
+					ld			(de), a			; target X
+					inc			de
+					ld			a, c
+					dec			a
+					ld			(de), a			; target Y
 					ret
 
 DrawLevel:			ld			hl, LevelEnd
@@ -77,20 +86,20 @@ DrawLevel:			ld			hl, LevelEnd
 					ret
 .drawFloor:			ld			a, FLOOR_ATTR
 					ld			de, 0x201
-					jr			.drawChar
+					jr			.drawSprite
 .drawSphere:		ld			a, SPHERE_ATTR
 					ld			de, 0x100
-					jr			.drawChar
+					jr			.drawSprite
 .drawWall:			ld			a, WALL_ATTR
 					ld			de, 0x200
-					;jr			.drawChar
-.drawChar:			push		bc
+					;jr			.drawSprite
+.drawSprite:		push		bc
 					push		hl
 					dec			b
 					dec			c
 					ld			hl, 0
 					ex			de, hl
-					call		DrawChar
+					call		DrawSprite
 					pop			hl
 					pop			bc
 					ret
@@ -127,3 +136,34 @@ GetLevelAddr:		; HL = B * 32 + C; 32 = LEVEL_WIDTH
 					ld			de, Level
 					add			hl, de
 					ret
+
+					; Returns:
+					;   C = количество точек, где уже есть шар
+
+DrawTargets:		ld			a, (NumTargets)
+					or			a
+					ret			z
+					ld			b, a
+					ld			c, 0			; количество точек, на которых уже стоит шар
+					ld			ix, Targets
+					ld			de, 2
+.loop:				exx
+					ld			c, (ix+0)
+					ld			b, (ix+1)
+					call		CheckBlocked
+					jr			nz, .blocked
+					ld			hl, 0x202
+.draw:				ld			a, TARGET_ATTR
+					ld			de, 0
+					call		DrawSprite
+.skip:				exx
+					add			ix, de
+					djnz		.loop
+					ret
+.blocked:			cp			'O'
+					jr			nz, .skip
+					exx
+					inc			c
+					exx
+					ld			hl, 0x100
+					jr			.draw
